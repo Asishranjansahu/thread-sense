@@ -12,7 +12,7 @@ function createWindow() {
             nodeIntegration: true,
             contextIsolation: false,
         },
-        icon: path.join(__dirname, 'public/pwa-192.png')
+        icon: path.join(__dirname, 'public/logo.png')
     });
 
     win.loadURL(

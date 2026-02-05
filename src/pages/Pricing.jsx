@@ -56,7 +56,7 @@ export default function Pricing() {
     ];
 
     return (
-        <div className="min-h-screen py-20 px-4 md:px-8 max-w-7xl mx-auto space-y-16 relative overflow-hidden">
+        <div className="min-h-screen py-20 px-4 md:px-8 space-y-16 relative overflow-hidden">
             <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 bg-[#030303]">
                 <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]"></div>
                 <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px]"></div>
@@ -122,7 +122,7 @@ export default function Pricing() {
                                 : 'bg-white/5 text-zinc-500 cursor-default'
                                 }`}
                         >
-                            {loading ? "Infiltrating..." : plan.button}
+                            {loading && plan.active ? "Infiltrating..." : plan.button}
                         </button>
                     </motion.div>
                 ))}

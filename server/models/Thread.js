@@ -42,6 +42,10 @@ const ThreadSchema = new mongoose.Schema({
             timestamp: { type: Date, default: Date.now }
         }
     ],
+    organization: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Organization"
+    },
     createdAt: {
         type: Date,
         default: Date.now

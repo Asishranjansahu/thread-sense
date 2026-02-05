@@ -3,7 +3,7 @@ import Stripe from "stripe";
 import jwt from "jsonwebtoken";
 
 const router = express.Router();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_...");
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "TEMPORARY_HOLDER_FOR_STARTUP");
 const SECRET = process.env.JWT_SECRET || "threadsense_secret_key_123";
 
 // Middleware to verify token

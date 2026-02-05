@@ -7,12 +7,25 @@ import notificationRoutes from "./routes/notifications.js";
 import botRoutes from "./routes/bot.js";
 import stripeRoutes from "./routes/stripe.js";
 import adminRoutes from "./routes/admin.js";
+import organizationRoutes from "./routes/organization.js";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: "*" }));
+
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// Cross-Origin Resource Policy for COEP compatibility
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+});
+
 app.use(express.json());
 
 // DB Connection
@@ -27,6 +40,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/bot", botRoutes);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/organization", organizationRoutes);
 
 // Serve static assets in production
 import path from "path";
@@ -173,7 +187,10 @@ function detectPlatform(url) {
   if (lowUrl.includes("reddit.com") || lowUrl.includes("redd.it")) return "reddit";
   if (lowUrl.includes("youtube.com") || lowUrl.includes("youtu.be")) return "youtube";
   if (lowUrl.includes("twitter.com") || lowUrl.includes("x.com")) return "twitter";
-  return "unknown";
+  if (lowUrl.includes("instagram.com")) return "instagram";
+  if (lowUrl.includes("facebook.com")) return "facebook";
+  if (lowUrl.includes("tiktok.com")) return "tiktok";
+  return "web";
 }
 
 /* SUMMARY (Neural Consolidation Engine) */
@@ -192,7 +209,7 @@ app.post("/summarize", async (req, res) => {
     } else if (platform === "youtube") {
       // Basic Scraper for YouTube Info
       try {
-        const ytR = await fetch(url, { headers: { "User-Agent": "Bot" } });
+        const ytR = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
         const ytT = await ytR.text();
         const titleMatch = ytT.match(/<title>(.*?)<\/title>/);
         const title = titleMatch ? titleMatch[1].replace(" - YouTube", "") : "Encrypted Visual Data";
@@ -201,9 +218,29 @@ app.post("/summarize", async (req, res) => {
         content = `Visual data stream intercepted: ${url}`;
       }
     } else if (platform === "twitter") {
-      content = `[X.COM PROTOCOL]\nSource: ${url}\nNeural footprint suggests a high-frequency micro-data stream.`;
+      content = `[X.COM PROTOCOL]\nSource: ${url}\nNeural footprint suggests a high-frequency micro-data stream. Content extraction restricted by X firewall. Analyzing Metadata...`;
+    } else if (platform === "instagram") {
+      content = `[INSTAGRAM INTEL]\nSource: ${url}\nNeural reconstruction suggests a visual data stream. Extracting aesthetic signals and caption data...`;
+    } else if (platform === "facebook") {
+      content = `[FACEBOOK ARCHIVE]\nSource: ${url}\nHistorical social data detected. Analyzing community engagement nodes...`;
     } else {
-      return res.status(400).json({ error: "Unsupported platform frequency." });
+      // 🌐 GENERAL WEB SCRAPER
+      try {
+        console.log("🌐 Initializing General Web Extraction...");
+        const response = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" } });
+        const html = await response.text();
+
+        const titleMatch = html.match(/<title>(.*?)<\/title>/);
+        const title = titleMatch ? titleMatch[1] : "Unnamed Data Node";
+
+        // Try to get meta description
+        const descMatch = html.match(/<meta name="description" content="(.*?)"/i) || html.match(/<meta property="og:description" content="(.*?)"/i);
+        const description = descMatch ? descMatch[1] : "No explicit description data available.";
+
+        content = `[WEB INTELLIGENCE]\nTitle: ${title}\nDescription: ${description}\n\nAnalyzing full data stream from ${url}...`;
+      } catch (e) {
+        content = `Unknown Data Frequency: ${url}. Attempting raw signal analysis.`;
+      }
     }
 
     if (!content || content.length < 5) {
@@ -218,10 +255,10 @@ app.post("/summarize", async (req, res) => {
       Perform exactly these 4 tasks and return as JSON:
       1. summary: A 3-bullet point high-impact executive summary.
       2. category: ONE word (Technology, Security, Finance, etc).
-      3. sentiment: A single number score 0-100.
+      3. sentiment: { "index": 0-100, "trust": 0-100, "joy": 0-100, "irony": 0-100 }
       4. keywords: exactly 10 comma-separated keywords.
 
-      Format: {"summary": "...", "category": "...", "sentiment": 50, "keywords": ["a", "b", ...]}
+      Format: {"summary": "...", "category": "...", "sentiment": {"index": 50, "trust": 30, "joy": 10, "irony": 10}, "keywords": ["a", "b", ...]}
     `);
 
     let analysis;
@@ -236,7 +273,7 @@ app.post("/summarize", async (req, res) => {
       analysis = {
         summary: neuralResponse,
         category: "Intelligence",
-        sentiment: 50,
+        sentiment: { index: 50, trust: 50, joy: 50, irony: 50 },
         keywords: ["data", "stream", "extraction"]
       };
     }
@@ -246,7 +283,8 @@ app.post("/summarize", async (req, res) => {
       content,
       platform,
       category: analysis.category,
-      score: analysis.sentiment,
+      score: analysis.sentiment.index || analysis.sentiment,
+      breakdown: analysis.sentiment,
       words: analysis.keywords
     });
 
@@ -296,34 +334,37 @@ app.post("/sentiment", async (req, res) => {
   const result = await askOllama(`
 Analyze the sentiment of the following text and return a single number from 0 (negative) to 100 (positive).
 Return ONLY the number. Do not write "Score:" or any explanation.
+Text: "${req.body.text.slice(0, 1000)}"
+  `);
+  res.json({ score: parseInt(result) || 50 });
+});
 
-Text:
-${req.body.text}
-`);
+/* TRANSLATE */
+app.post("/translate", async (req, res) => {
+  const { text, targetLang } = req.body;
+  if (!text || !targetLang) return res.status(400).json({ error: "Missing data" });
 
-  // Handle error case
-  if (result.startsWith("⚠️")) {
-    return res.json({ score: 0, error: result });
-  }
-
-  // Extract the first number found in the response for robustness
-  const match = result.match(/\d+/);
-  const score = match ? parseInt(match[0], 10) : 50;
-
-  res.json({ score: Math.min(100, Math.max(0, score)) });
+  const result = await askAI(`
+    Translate the following text into ${targetLang}. 
+    Maintain the technical and analytical tone.
+    Return ONLY the translated text.
+    
+    Text: "${text}"
+  `);
+  res.json({ translatedText: result.trim() });
 });
 
 /* KEYWORDS */
 app.post("/keywords", async (req, res) => {
   const words = await askOllama(`
-Extract 10 main topics/keywords from the text below.
-Return them as a strictly comma-separated list.
+Extract 10 main topics / keywords from the text below.
+Return them as a strictly comma - separated list.
 Do NOT use numbering, bullet points, or newlines.
 Do NOT output any introductory text like "Here are the keywords".
 
-Text:
-${req.body.text}
-`);
+    Text:
+    ${req.body.text}
+    `);
 
   if (words.startsWith("⚠️")) {
     return res.json({ words: ["⚠️ AI Offline"] });
@@ -350,8 +391,8 @@ app.post("/compare", async (req, res) => {
 
   const result = await askOllama(`
 Compare these reddit threads:
-${combined}
-`);
+    ${combined}
+    `);
 
   res.json({ result });
 });
@@ -367,15 +408,16 @@ app.post("/target-search", async (req, res) => {
     Provide a detailed intelligence report including:
     1. Digital Footprint Estimate
     2. Primary Interests & Affiliations
-    3. Sentiment Pulse (Public Perception)
+    3. Sentiment Pulse(Public Perception)
     4. Potential Influence Index
     
-    Structure this as a professional intelligence briefing for a high-end cyberpunk operative terminal.
+    Structure this as a professional intelligence briefing for a high - end cyberpunk operative terminal.
   `);
 
   res.json({ report });
 });
 
-app.listen(5050, () =>
-  console.log("🚀 Backend → http://localhost:5050")
+const PORT = process.env.PORT || 5050;
+app.listen(PORT, () =>
+  console.log(`🚀 Neural Backend Active on Port ${PORT} `)
 );

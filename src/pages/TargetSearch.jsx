@@ -37,7 +37,6 @@ export default function TargetSearch() {
 
     return (
         <div className="min-h-screen py-10 px-4 md:px-8 max-w-7xl mx-auto space-y-12 relative z-10 overflow-hidden">
-            <div className="scanline"></div>
 
             <header className="flex flex-col items-center justify-center space-y-8 text-center relative pt-12">
 

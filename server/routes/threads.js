@@ -1,6 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import Thread from "../models/Thread.js";
+import User from "../models/User.js";
 
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET || "threadsense_secret_key_123";
@@ -24,8 +25,12 @@ router.post("/", verifyToken, async (req, res) => {
     try {
         const { url, title, summary, score, keywords, platform, category } = req.body;
 
+        const user = await User.findById(req.user.id);
+        const orgId = user?.organization;
+
         const newThread = new Thread({
             user: req.user.id,
+            organization: orgId,
             url,
             title,
             summary,
@@ -79,10 +84,15 @@ router.get("/search", verifyToken, async (req, res) => {
     }
 });
 
-// GET USER HISTORY
+// GET USER HISTORY (Includes Org Threads)
 router.get("/", verifyToken, async (req, res) => {
     try {
-        const threads = await Thread.find({ user: req.user.id }).sort({ createdAt: -1 });
+        const user = await User.findById(req.user.id);
+        const query = user.organization
+            ? { $or: [{ user: req.user.id }, { organization: user.organization }] }
+            : { user: req.user.id };
+
+        const threads = await Thread.find(query).sort({ createdAt: -1 });
         res.json(threads);
     } catch (err) {
         res.status(500).json({ error: err.message });

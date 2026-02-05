@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { HashRouter, Routes, Route, Navigate, Link } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, Link, useLocation, Outlet } from "react-router-dom";
 import jsPDF from "jspdf";
 import { Doughnut, Line } from "react-chartjs-2";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,6 +8,7 @@ import "chart.js/auto";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
 import Organization from "./pages/Organization";
@@ -16,12 +17,14 @@ import Pricing from "./pages/Pricing";
 import Welcome from "./pages/Welcome";
 import TargetSearch from "./pages/TargetSearch";
 import { PaymentSuccess, PaymentCancel } from "./pages/PaymentStatus";
-import { Youtube, Twitter, MessageSquare, Shield, Zap, Target, Search, Clock, ExternalLink, Users, LayoutDashboard, CreditCard, LogOut, Bell, Menu, ChevronLeft, ChevronRight } from "lucide-react";
+import { Youtube, Twitter, MessageSquare, Shield, Zap, Target, Search, Clock, ExternalLink, Users, LayoutDashboard, CreditCard, LogOut, Bell, Menu, ChevronLeft, ChevronRight, Instagram, Facebook, Globe, Loader2 } from "lucide-react";
 import { API } from "./config";
+import SplashLoader from "./components/SplashLoader";
 
 // --- SIDEBAR COMPONENT ---
 function Sidebar({ isCollapsed, toggleSidebar }) {
   const { user, logout } = useContext(AuthContext);
+  const location = useLocation();
 
   const menuItems = [
     { name: "Terminal", path: "/", icon: <LayoutDashboard className="w-5 h-5" />, color: "text-cyan-400" },
@@ -38,21 +41,24 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
       className="fixed left-0 top-0 h-screen bg-black/50 backdrop-blur-3xl border-r border-white/5 flex flex-col items-center py-10 z-50 overflow-hidden"
     >
       <div className="w-full px-4 mb-12 flex items-center justify-between">
-        <AnimatePresence mode="wait">
+        <div className="flex items-center gap-3">
           {!isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              className="flex items-center gap-3"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-                <Zap className="w-5 h-5 text-white" />
+            <>
+              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(6,182,212,0.3)] bg-zinc-900 flex items-center justify-center">
+                <img
+                  src="/logo.png"
+                  alt="TS"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = '<span class="text-cyan-500 font-black">TS</span>';
+                  }}
+                />
               </div>
-              <span className="text-[10px] font-black tracking-[0.4em] text-cyan-400 uppercase">THRDSNS</span>
-            </motion.div>
+              <span className="text-[10px] font-black tracking-[0.2em] text-cyan-400 uppercase">THREAD SENSE</span>
+            </>
           )}
-        </AnimatePresence>
+        </div>
 
         <button
           onClick={toggleSidebar}
@@ -67,20 +73,16 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
           <Link
             key={item.name}
             to={item.path}
-            className={`flex items-center gap-4 p-4 rounded-2xl transition-all group hover:bg-white/5 ${window.location.pathname === item.path ? 'bg-white/5 border border-white/10 shadow-[inner_0_0_10px_rgba(255,255,255,0.05)]' : 'border border-transparent'
+            className={`flex items-center gap-4 p-4 rounded-2xl transition-all group hover:bg-white/5 ${location.pathname === item.path ? 'bg-white/5 border border-white/10 shadow-[inner_0_0_10px_rgba(255,255,255,0.05)]' : 'border border-transparent'
               } ${isCollapsed ? 'justify-center' : ''}`}
           >
             <div className={`transition-all group-hover:scale-110 shrink-0 ${item.color}`}>
               {item.icon}
             </div>
             {!isCollapsed && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-[10px] uppercase tracking-widest font-black text-zinc-500 group-hover:text-white transition-colors truncate"
-              >
+              <span className="text-[10px] uppercase tracking-widest font-black text-zinc-500 group-hover:text-white transition-colors truncate">
                 {item.name}
-              </motion.span>
+              </span>
             )}
           </Link>
         ))}
@@ -102,19 +104,30 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
 }
 
 // --- LAYOUT COMPONENT ---
-function Layout({ children }) {
+function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
 
   return (
     <div className="flex bg-black min-h-screen">
       <Sidebar isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
-      <motion.main
-        animate={{ marginLeft: isCollapsed ? 80 : 256 }}
-        className="flex-1 relative"
+      <div
+        className="flex-1 relative transition-[padding] duration-300 ease-in-out"
+        style={{ paddingLeft: isCollapsed ? 80 : 256 }}
       >
         <div className="scanline opacity-10 pointer-events-none"></div>
-        {children}
-      </motion.main>
+        <AnimatePresence>
+          <motion.main
+            key={location.pathname}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.1 }}
+            className="w-full relative"
+          >
+            <Outlet />
+          </motion.main>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -123,7 +136,7 @@ const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-black text-cyan-500 font-mono animate-pulse">INITIATING SECURE SESSION...</div>;
   if (!user) return <Navigate to="/login" />;
-  return <Layout>{children}</Layout>;
+  return children;
 };
 
 // --- TYPING EFFECT COMPONENT ---
@@ -174,6 +187,22 @@ function Dashboard() {
   const [platform, setPlatform] = useState("reddit");
   const [category, setCategory] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [selectedLang, setSelectedLang] = useState({ name: "English", code: "en-IN", native: "English" });
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [breakdown, setBreakdown] = useState({ trust: 0, joy: 0, irony: 0 });
+
+  const IndianLanguages = [
+    { name: "English", code: "en-IN", native: "English" },
+    { name: "Hindi", code: "hi-IN", native: "हिन्दी" },
+    { name: "Bengali", code: "bn-IN", native: "বাংলা" },
+    { name: "Telugu", code: "te-IN", native: "తెలుగు" },
+    { name: "Marathi", code: "mr-IN", native: "मराठी" },
+    { name: "Tamil", code: "ta-IN", native: "தமிழ்" },
+    { name: "Gujarati", code: "gu-IN", native: "ગુજરાતી" },
+    { name: "Kannada", code: "kn-IN", native: "ಕನ್ನಡ" },
+    { name: "Malayalam", code: "ml-IN", native: "മലയാളം" },
+    { name: "Punjabi", code: "pa-IN", native: "ਪੰਜਾਬੀ" }
+  ];
 
   const { user, logout } = useContext(AuthContext);
 
@@ -224,7 +253,7 @@ function Dashboard() {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  const speak = (text) => {
+  const speak = (text, langCode = "en-IN") => {
     if ("speechSynthesis" in window) {
       if (isSpeaking) {
         window.speechSynthesis.cancel();
@@ -232,11 +261,45 @@ function Dashboard() {
         return;
       }
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = langCode;
       utterance.onend = () => setIsSpeaking(false);
       utterance.rate = 0.9;
       utterance.pitch = 0.8;
+
+      // Try to find a voice for the language
+      const voices = window.speechSynthesis.getVoices();
+      const voice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
+      if (voice) utterance.voice = voice;
+
       window.speechSynthesis.speak(utterance);
       setIsSpeaking(true);
+    }
+  };
+
+  const translateAndSpeak = async () => {
+    if (selectedLang.code === "en-IN") {
+      speak(summary, "en-IN");
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const res = await fetch(API + "/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: summary, targetLang: selectedLang.name })
+      });
+      const data = await res.json();
+      if (data.translatedText) {
+        speak(data.translatedText, selectedLang.code);
+      } else {
+        throw new Error("Translation failed");
+      }
+    } catch (err) {
+      console.error("Translation fail:", err);
+      speak(summary, "en-IN"); // Fallback
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -300,6 +363,7 @@ function Dashboard() {
       setPlatform(r.platform);
       setCategory(r.category);
       setScore(r.score);
+      setBreakdown(r.breakdown || { trust: 0, joy: 0, irony: 0 });
       setKeywords(r.words);
       setSentimentHistory(prev => [...prev.slice(-9), r.score]);
       setUrl("");
@@ -393,50 +457,21 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen py-10 px-4 md:px-8 max-w-7xl mx-auto space-y-12 relative z-10 overflow-hidden">
-      <div className="scanline"></div>
 
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="flex flex-col items-center justify-center space-y-8 text-center relative"
-      >
+      <header className="flex flex-col items-center justify-center space-y-8 text-center relative pt-12">
         <div className="flex items-center gap-6 absolute top-0 right-0">
           <button onClick={requestNotification} className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-500/50 hover:text-cyan-400 transition-all group">
             <Bell className="w-5 h-5 group-hover:animate-bounce" />
           </button>
         </div>
 
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-cyan-500/20 bg-cyan-900/10 backdrop-blur-3xl animate-pulse"
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inset-0 rounded-full bg-cyan-400 opacity-75"></span>
-            <span className="relative rounded-full h-2 w-2 bg-cyan-500 shadow-[0_0_12px_#00f3ff]"></span>
-          </span>
-          <span className="text-[10px] font-black tracking-[0.5em] text-cyan-400 uppercase">SYSTEM STABLE // {user?.username}</span>
-        </motion.div>
-
         <div className="relative">
-          <h1 className="h1-glow relative z-10">THREAD<span className="text-cyan-500">SENSE</span> DESKTOP</h1>
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: "8rem" }}
-            transition={{ delay: 0.5, duration: 1 }}
-            className="absolute -bottom-4 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent blur-sm"
-          ></motion.div>
+          <h1 className="h1-glow relative z-10 uppercase tracking-tighter">THREAD<span className="text-cyan-500">SENSE</span></h1>
+          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent blur-sm w-32"></div>
         </div>
-      </motion.header>
+      </header>
 
-      <motion.section
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.4 }}
-        className="max-w-4xl mx-auto"
-      >
+      <section className="max-w-4xl mx-auto">
         <div className="glass-panel p-2 neon-border-cyan group">
           <div className="flex flex-col md:flex-row gap-2">
             <input
@@ -454,7 +489,7 @@ function Dashboard() {
             </button>
           </div>
         </div>
-        <div className="mt-4 flex justify-center gap-6 opacity-30">
+        <div className="mt-6 flex flex-wrap justify-center gap-6 opacity-30">
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
             <MessageSquare className="w-3 h-3" /> Reddit
           </div>
@@ -462,10 +497,19 @@ function Dashboard() {
             <Youtube className="w-3 h-3" /> YouTube
           </div>
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
-            <Twitter className="w-3 h-3" /> X / Twitter
+            <Twitter className="w-3 h-3" /> X
+          </div>
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
+            <Instagram className="w-3 h-3" /> Instagram
+          </div>
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
+            <Facebook className="w-3 h-3" /> Facebook
+          </div>
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
+            <Globe className="w-3 h-3" /> Any Website
           </div>
         </div>
-      </motion.section>
+      </section>
 
       {errorMSG && (
         <div className="max-w-2xl mx-auto p-5 rounded-3xl bg-red-500/5 border border-red-500/20 text-red-400 text-[10px] font-mono flex items-center gap-4 animate-bounce">
@@ -488,11 +532,17 @@ function Dashboard() {
                   <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-2xl border ${platform === 'youtube' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
                       platform === 'twitter' ? 'bg-sky-500/10 border-sky-500/20 text-sky-400' :
-                        'bg-orange-500/10 border-orange-500/20 text-orange-500'
+                        platform === 'instagram' ? 'bg-pink-500/10 border-pink-500/20 text-pink-500' :
+                          platform === 'facebook' ? 'bg-blue-600/10 border-blue-600/20 text-blue-600' :
+                            platform === 'web' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                              'bg-orange-500/10 border-orange-500/20 text-orange-500'
                       }`}>
                       {platform === 'youtube' && <Youtube className="w-8 h-8" />}
                       {platform === 'twitter' && <Twitter className="w-8 h-8" />}
                       {platform === 'reddit' && <MessageSquare className="w-8 h-8" />}
+                      {platform === 'instagram' && <Instagram className="w-8 h-8" />}
+                      {platform === 'facebook' && <Facebook className="w-8 h-8" />}
+                      {platform === 'web' && <Globe className="w-8 h-8" />}
                     </div>
                     <div>
                       <span className="label-tech text-cyan-400">Memory Matrix / {category || "Scanning..."}</span>
@@ -500,12 +550,28 @@ function Dashboard() {
                     </div>
                   </div>
                   <div className="flex gap-4 items-center">
-                    <button
-                      onClick={() => speak(summary)}
-                      className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${isSpeaking ? 'bg-cyan-500 text-black border-cyan-400 animate-pulse' : 'bg-white/5 border-white/10 hover:border-cyan-500/50 text-cyan-400'}`}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={selectedLang.code}
+                        onChange={(e) => setSelectedLang(IndianLanguages.find(l => l.code === e.target.value))}
+                        className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-bold text-cyan-400 outline-none hover:border-cyan-500/50 transition-all cursor-pointer"
+                      >
+                        {IndianLanguages.map(lang => (
+                          <option key={lang.code} value={lang.code} className="bg-zinc-900">{lang.native} ({lang.name})</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={translateAndSpeak}
+                        disabled={isTranslating}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${isSpeaking ? 'bg-cyan-500 text-black border-cyan-400 animate-pulse' : 'bg-white/5 border-white/10 hover:border-cyan-500/50 text-cyan-400'} ${isTranslating ? 'opacity-50 cursor-wait' : ''}`}
+                      >
+                        {isTranslating ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                        )}
+                      </button>
+                    </div>
                     <button onClick={postToReddit} className="px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] font-bold text-red-500 tracking-widest uppercase hover:bg-red-500/20 transition-all">
                       Post to Reddit
                     </button>
@@ -520,16 +586,39 @@ function Dashboard() {
                 </div>
 
                 <div className="mt-20 pt-12 border-t border-white/5">
-                  <span className="label-tech text-purple-400">Neural Connectives</span>
-                  <div className="flex flex-wrap gap-4 items-center justify-start mt-6">
-                    {keywords.map((k, i) => (
-                      <span
-                        key={i}
-                        className="px-5 py-2 glass-panel border-cyan-500/10 text-xs font-bold text-cyan-100/60 hover:text-cyan-400 hover:border-cyan-500/40 hover:scale-110 transition-all cursor-pointer uppercase tracking-widest"
-                      >
-                        # {k}
-                      </span>
-                    ))}
+                  <div className="flex items-center justify-between mb-8">
+                    <span className="label-tech text-purple-400">Neural Connectives</span>
+                    <span className="text-[10px] text-zinc-600 font-mono italic uppercase tracking-widest">Semantic Frequency Index</span>
+                  </div>
+                  <div className="flex flex-wrap gap-4 items-center justify-start mt-6 min-h-[150px]">
+                    <AnimatePresence>
+                      {keywords.map((k, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
+                          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                          transition={{
+                            delay: i * 0.08,
+                            type: "spring",
+                            stiffness: 260,
+                            damping: 20
+                          }}
+                          whileHover={{
+                            scale: 1.15,
+                            color: "#00f3ff",
+                            textShadow: "0 0 15px rgba(0, 243, 255, 0.5)"
+                          }}
+                          className={`px-5 py-2 glass-panel border-cyan-500/10 cursor-pointer transition-colors group relative ${i % 3 === 0 ? 'text-lg font-black py-3' : i % 2 === 0 ? 'text-sm font-bold' : 'text-xs font-medium'
+                            }`}
+                        >
+                          <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[inherit]"></div>
+                          <span className="relative z-10 flex items-center gap-2">
+                            <span className="text-cyan-500/30 font-mono">#</span>
+                            {k.toUpperCase()}
+                          </span>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
@@ -542,40 +631,28 @@ function Dashboard() {
                   <span className="label-tech text-cyan-400">Pulse Monitor</span>
                   <span className="text-[10px] text-zinc-500 font-mono">LIVE</span>
                 </div>
-                <div className="h-40 relative">
-                  <Line
-                    data={{
-                      labels: sentimentHistory.map((_, i) => i + 1),
-                      datasets: [{
-                        label: 'Sentiment',
-                        data: sentimentHistory,
-                        borderColor: '#00f3ff',
-                        backgroundColor: 'rgba(0, 243, 255, 0.05)',
-                        fill: true,
-                        tension: 0.5,
-                        pointRadius: 0,
-                        borderWidth: 3,
-                      }]
-                    }}
-                    options={{
-                      maintainAspectRatio: false,
-                      plugins: { legend: { display: false } },
-                      scales: {
-                        x: { display: false },
-                        y: { min: 0, max: 100, grid: { display: false }, ticks: { display: false } }
-                      }
-                    }}
-                  />
-                </div>
-                <div className="mt-6 flex justify-between items-end">
-                  <div>
-                    <div className="text-3xl font-black text-white">98.4%</div>
-                    <div className="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">Consistency</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-cyan-400">STABLE</div>
-                    <div className="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">Status</div>
-                  </div>
+                <div className="mt-8 grid grid-cols-1 gap-4">
+                  {[
+                    { label: "Trust", value: breakdown.trust, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+                    { label: "Joy", value: breakdown.joy, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+                    { label: "Irony", value: breakdown.irony, color: "text-purple-400", bg: "bg-purple-500/10" }
+                  ].map((stat, i) => (
+                    <div key={i} className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-2">
+                          <span className="text-zinc-500">{stat.label}</span>
+                          <span className={stat.color}>{stat.value}%</span>
+                        </div>
+                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${stat.value}%` }}
+                            className={`h-full ${stat.color.replace('text', 'bg')}`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -599,7 +676,14 @@ function Dashboard() {
                     </defs>
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-                    <span className="text-6xl font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]">{score}</span>
+                    <motion.span
+                      key={score}
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="text-6xl font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                    >
+                      {score}
+                    </motion.span>
                     <span className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em] mt-1">INDEX</span>
                   </div>
                 </div>
@@ -665,21 +749,18 @@ function App() {
         {/* Core Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Protected Dashboard */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-
-        {/* Other Protected Pages */}
-        <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/organization" element={<ProtectedRoute><Organization /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-        <Route path="/pricing" element={<Pricing />} /> {/* Pricing can be public */}
-        <Route path="/target-search" element={<ProtectedRoute><TargetSearch /></ProtectedRoute>} />
+        {/* Sidebar Layout Wrapper */}
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/organization" element={<ProtectedRoute><Organization /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/target-search" element={<ProtectedRoute><TargetSearch /></ProtectedRoute>} />
+        </Route>
         <Route path="/success" element={<PaymentSuccess />} />
         <Route path="/cancel" element={<PaymentCancel />} />
 
@@ -691,9 +772,24 @@ function App() {
 }
 
 export default function Root() {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <AuthProvider>
-      <App />
+      <AnimatePresence mode="wait">
+        {showSplash ? (
+          <SplashLoader key="splash" onComplete={() => setShowSplash(false)} />
+        ) : (
+          <motion.div
+            key="app"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+          >
+            <App />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AuthProvider>
   );
 }

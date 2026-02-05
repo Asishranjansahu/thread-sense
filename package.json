@@ -34,12 +34,13 @@
     ]
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.4",
     "bcryptjs": "^3.0.3",
     "chart.js": "^4.5.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "electron-is-dev": "^2.0.0",
-    "framer-motion": "^12.31.0",
+    "framer-motion": "^12.33.0",
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^2.5.1",
     "lucide-react": "^0.563.0",

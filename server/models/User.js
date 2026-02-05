@@ -8,12 +8,22 @@ const UserSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: true,
-        unique: true
+        unique: true,
+        sparse: true
+    },
+    phone: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true
     },
     password: {
         type: String,
-        required: true
+        required: false // Not required for Google login
     },
     avatar: {
         type: String,
@@ -27,6 +37,16 @@ const UserSchema = new mongoose.Schema({
         type: String,
         enum: ["owner", "admin", "member"],
         default: "member"
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    otp: {
+        type: String
+    },
+    otpExpires: {
+        type: Date
     },
     createdAt: {
         type: Date,

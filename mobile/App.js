@@ -10,6 +10,7 @@ import {
     StatusBar,
     SafeAreaView,
     ImageBackground,
+    Image,
     Dimensions,
     Animated
 } from 'react-native';
@@ -47,7 +48,7 @@ const WelcomeScreen = ({ onStart }) => {
                 <View style={styles.welcomeOverlay}>
                     <Animated.View style={[styles.welcomeContent, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
                         <View style={styles.logoRing}>
-                            <View style={styles.logoInner} />
+                            <Image source={require('./assets/icon.png')} style={styles.logoImage} />
                         </View>
 
                         <Text style={styles.welcomeBrand}>THREAD<Text style={styles.cyanText}>SENSE</Text></Text>
@@ -258,11 +259,10 @@ const styles = StyleSheet.create({
         shadowRadius: 15,
         shadowOpacity: 0.5,
     },
-    logoInner: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#00f3ff',
+    logoImage: {
+        width: 80,
+        height: 80,
+        resizeMode: 'contain',
     },
     welcomeBrand: {
         fontSize: 48,

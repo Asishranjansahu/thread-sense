@@ -1,7 +1,8 @@
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Clock, ExternalLink, Trash2, Youtube, Twitter, MessageSquare, Search } from "lucide-react";
+import { ArrowLeft, Clock, ExternalLink, Trash2, Youtube, Twitter, MessageSquare, Search, Users } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { API } from "../config";
 
 export default function History() {
@@ -95,9 +96,29 @@ export default function History() {
                     <Link to="/" className="text-cyan-400 mt-2 inline-block hover:underline">Start a new scan</Link>
                 </div>
             ) : (
-                <div className="grid gap-4">
+                <motion.div
+                    initial="hidden"
+                    animate="show"
+                    variants={{
+                        hidden: { opacity: 0 },
+                        show: {
+                            opacity: 1,
+                            transition: {
+                                staggerChildren: 0.1
+                            }
+                        }
+                    }}
+                    className="grid gap-4"
+                >
                     {threads.map(thread => (
-                        <div key={thread._id} className="glass-panel p-6 flex flex-col md:flex-row gap-6 relative group transition-colors hover:border-cyan-500/30">
+                        <motion.div
+                            key={thread._id}
+                            variants={{
+                                hidden: { opacity: 0, x: -20 },
+                                show: { opacity: 1, x: 0 }
+                            }}
+                            className="glass-panel p-6 flex flex-col md:flex-row gap-6 relative group transition-colors hover:border-cyan-500/30"
+                        >
                             <div className="flex-1 space-y-3">
                                 <div className="flex items-center gap-3">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${thread.score > 60 ? 'bg-green-500/20 text-green-400' : thread.score > 40 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
@@ -120,6 +141,12 @@ export default function History() {
                                     <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[10px] font-black uppercase tracking-tighter border border-purple-500/20">
                                         {thread.category || "GENERAL"}
                                     </span>
+                                    {thread.organization && (
+                                        <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-black uppercase tracking-tighter border border-cyan-500/20 flex items-center gap-1">
+                                            <Users className="w-2.5 h-2.5" />
+                                            Shared Intelligence
+                                        </span>
+                                    )}
                                 </div>
 
                                 <a href={thread.url} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold text-zinc-200 hover:text-cyan-400 transition-colors flex items-center gap-2">
@@ -153,9 +180,9 @@ export default function History() {
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             )}
         </div>
     );
