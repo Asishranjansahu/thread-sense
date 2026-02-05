@@ -299,25 +299,10 @@ function Dashboard() {
       setSummary(r.summary);
       setPlatform(r.platform);
       setCategory(r.category);
+      setScore(r.score);
+      setKeywords(r.words);
+      setSentimentHistory(prev => [...prev.slice(-9), r.score]);
       setUrl("");
-
-      const [s, k] = await Promise.all([
-        fetch(API + "/sentiment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: r.summary })
-        }).then(r => r.json()),
-
-        fetch(API + "/keywords", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: r.summary })
-        }).then(r => r.json())
-      ]);
-
-      setScore(s.score);
-      setKeywords(k.words);
-      setSentimentHistory(prev => [...prev.slice(-9), s.score]);
 
       if (user) {
         const token = localStorage.getItem("token");
@@ -330,8 +315,8 @@ function Dashboard() {
           body: JSON.stringify({
             url: targetUrl,
             summary: r.summary,
-            score: s.score,
-            keywords: k.words,
+            score: r.score,
+            keywords: r.words,
             platform: r.platform,
             category: r.category
           })

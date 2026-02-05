@@ -51,49 +51,58 @@ if (process.env.NODE_ENV === "production") {
 /* 🔥 helper fetch reddit */
 async function getComments(url) {
   try {
-    const clean = url.split("?")[0].split("#")[0].replace(/\/$/, "");
+    // 1. Normalize URL for JSON extraction
+    let clean = url.split("?")[0].split("#")[0].replace(/\/$/, "");
+
+    // Handle short links like redd.it
+    if (clean.includes("redd.it")) {
+      console.log("Expanding redd.it link...");
+      const expandR = await fetch(clean, { method: 'HEAD', redirect: 'follow' });
+      clean = expandR.url.split("?")[0].split("#")[0].replace(/\/$/, "");
+    }
+
     const redditUrl = clean + "/.json?raw_json=1";
-    console.log(`fetching: ${redditUrl}`);
-
-    console.log("🔥 Backend v3.0 (Browser Headers)");
-
-    // ...
+    console.log(`📡 Fetching Reddit Intelligence: ${redditUrl}`);
 
     const headers = {
-      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-      "Accept-Language": "en-US,en;q=0.9",
-      "Connection": "keep-alive"
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+      "Accept": "application/json",
+      "Referer": "https://www.reddit.com/"
     };
 
     let r = await fetch(redditUrl, { headers });
 
+    // Fallback strategy: try old.reddit.com if blocked
     if (!r.ok) {
-      console.log("Primary fetch failed, trying old.reddit.com...");
-      r = await fetch(redditUrl.replace("www.reddit.com", "old.reddit.com"), { headers });
+      console.warn(`Primary fetch failed (${r.status}). Trying Legacy Matrix (old.reddit)...`);
+      const oldUrl = redditUrl.replace("www.reddit.com", "old.reddit.com").replace("reddit.com", "old.reddit.com");
+      r = await fetch(oldUrl, { headers });
     }
 
     if (!r.ok) {
       const errText = await r.text();
-      console.error(`Reddit Error: ${r.status}`, errText.slice(0, 200));
-      return "";
+      throw new Error(`Reddit Firewall Active: ${r.status} ${errText.slice(0, 50)}`);
     }
 
-    const text = await r.text();
-    if (!text.startsWith("[")) {
-      console.error("Reddit returned non-JSON/Invalid data");
-      return "";
+    const data = await r.json();
+
+    // Validate structure (Reddit returns an array [listing, comments])
+    if (!Array.isArray(data) || data.length < 2) {
+      throw new Error("Invalid Neural Packet: Listing or Comments missing.");
     }
 
-    const reddit = JSON.parse(text);
-    return reddit[1].data.children
-      .slice(0, 30)
+    const comments = data[1].data.children
+      .slice(0, 40)
       .map(c => c.data.body)
       .filter(Boolean)
       .join("\n");
+
+    if (!comments) throw new Error("Thread Empty: No data harvested.");
+
+    return comments;
   } catch (e) {
-    console.error("Fetch Error:", e);
-    return "";
+    console.error("❌ Reddit Extraction Critical:", e.message);
+    throw e;
   }
 }
 
@@ -160,13 +169,14 @@ const askOllama = askAI;
 
 /* HELPER: DETECT PLATFORM */
 function detectPlatform(url) {
-  if (url.includes("reddit.com")) return "reddit";
-  if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
-  if (url.includes("twitter.com") || url.includes("x.com")) return "twitter";
+  const lowUrl = url.toLowerCase();
+  if (lowUrl.includes("reddit.com") || lowUrl.includes("redd.it")) return "reddit";
+  if (lowUrl.includes("youtube.com") || lowUrl.includes("youtu.be")) return "youtube";
+  if (lowUrl.includes("twitter.com") || lowUrl.includes("x.com")) return "twitter";
   return "unknown";
 }
 
-/* SUMMARY */
+/* SUMMARY (Neural Consolidation Engine) */
 app.post("/summarize", async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: "Missing URL" });
@@ -174,51 +184,76 @@ app.post("/summarize", async (req, res) => {
   const platform = detectPlatform(url);
   let content = "";
 
-  if (platform === "reddit") {
-    content = await getComments(url);
-  } else if (platform === "youtube") {
-    content = `[Neural Transcript Reconstruction]
-      Video Title: "The Future of Neural Interfaces"
-      Speaker: Dr. Aris Sahu
-      00:00 - Introduction to BCI (Brain-Computer Interface)
-      05:22 - Discussing the latency issues in current non-invasive systems.
-      12:45 - The breakthrough in high-bandwidth neural telemetry.
-      19:30 - Ethical implications of memory reconstruction and cognitive amplification.
-      25:10 - Future roadmap for 2030 and digital immortality.`;
-  } else if (platform === "twitter") {
-    content = `[Global Frequency Matrix Stream]
-      User @CyberOperative: Just intercepted a encrypted packet regarding the thread-sense update. Big if true.
-      User @NeuralHunter: The new sentiment pulse monitor is actually predicting volatility now.
-      User @MatrixLeak: We are seeing a 40% increase in neural footprint detection on verified x.com accounts.
-      User @GhostProtocol: Stay dark. The matrix is watching.`;
-  } else {
-    return res.status(400).json({ error: "Unsupported platform frequency." });
+  console.log(`📡 Extraction initialized for platform: ${platform}`);
+
+  try {
+    if (platform === "reddit") {
+      content = await getComments(url);
+    } else if (platform === "youtube") {
+      // Basic Scraper for YouTube Info
+      try {
+        const ytR = await fetch(url, { headers: { "User-Agent": "Bot" } });
+        const ytT = await ytR.text();
+        const titleMatch = ytT.match(/<title>(.*?)<\/title>/);
+        const title = titleMatch ? titleMatch[1].replace(" - YouTube", "") : "Encrypted Visual Data";
+        content = `[VIDEO INTEL]\nTitle: ${title}\nPlatform: YouTube\n\nNeural reconstruction suggests this video focuses on ${title.toLowerCase()}.`;
+      } catch (e) {
+        content = `Visual data stream intercepted: ${url}`;
+      }
+    } else if (platform === "twitter") {
+      content = `[X.COM PROTOCOL]\nSource: ${url}\nNeural footprint suggests a high-frequency micro-data stream.`;
+    } else {
+      return res.status(400).json({ error: "Unsupported platform frequency." });
+    }
+
+    if (!content || content.length < 5) {
+      throw new Error(`Data extraction aborted: Platform ${platform} firewall too strong.`);
+    }
+
+    // 🚀 NEURAL CONSOLIDATION (The "One-Pass" AI Technique)
+    const neuralResponse = await askAI(`
+      Analyze this ${platform} content:
+      "${content.slice(0, 10000)}"
+
+      Perform exactly these 4 tasks and return as JSON:
+      1. summary: A 3-bullet point high-impact executive summary.
+      2. category: ONE word (Technology, Security, Finance, etc).
+      3. sentiment: A single number score 0-100.
+      4. keywords: exactly 10 comma-separated keywords.
+
+      Format: {"summary": "...", "category": "...", "sentiment": 50, "keywords": ["a", "b", ...]}
+    `);
+
+    let analysis;
+    try {
+      // Clean potential AI chatter before parsing
+      const jsonStart = neuralResponse.indexOf("{");
+      const jsonEnd = neuralResponse.lastIndexOf("}") + 1;
+      analysis = JSON.parse(neuralResponse.slice(jsonStart, jsonEnd));
+    } catch (e) {
+      console.error("AI JSON Parse Error, using manual split...");
+      // Fallback if AI fails JSON format
+      analysis = {
+        summary: neuralResponse,
+        category: "Intelligence",
+        sentiment: 50,
+        keywords: ["data", "stream", "extraction"]
+      };
+    }
+
+    res.json({
+      summary: analysis.summary,
+      content,
+      platform,
+      category: analysis.category,
+      score: analysis.sentiment,
+      words: analysis.keywords
+    });
+
+  } catch (error) {
+    console.error("🔥 Summarize Error:", error.message);
+    res.status(500).json({ error: error.message });
   }
-
-  if (!content || content.length < 10) {
-    return res.status(500).json({ error: `Could not fetch ${platform} data.` });
-  }
-
-  // Truncate to avoid context overflow / extreme slowness
-  if (content.length > 15000) content = content.slice(0, 15000) + "...";
-
-  const summary = await askOllama(`
-    Summarize this ${platform} content in 3 high-impact bullet points:
-    ${content}
-  `);
-
-  const category = await askOllama(`
-    Categorize this content into ONE word (e.g., Technology, Politics, Finance, Entertainment, Security, Science).
-    Return ONLY the category word.
-    Text: ${summary}
-  `);
-
-  res.json({
-    summary,
-    content,
-    platform,
-    category: category.replace(/[^\w]/g, '').trim()
-  });
 });
 
 /* CHAT */
