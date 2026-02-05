@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { User, Lock, ArrowRight, Loader, Phone, Mail } from "lucide-react";
+import { User, Lock, ArrowRight, Loader, Phone, Mail, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GoogleLogin } from "@react-oauth/google";
 import { API } from "../config";
@@ -223,11 +223,32 @@ export default function Login() {
                         </p>
                     </div>
 
+                    {/* Android App Download */}
+                    <a
+                        href="#" // REPLACE WITH YOUR APK LINK (e.g., Google Drive link)
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 block bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 py-4 px-6 rounded-2xl backdrop-blur-lg hover:border-emerald-500/50 transition-all group"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                    <Download size={16} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-emerald-400 text-[10px] uppercase font-black tracking-widest leading-tight">Android System</p>
+                                    <p className="text-zinc-500 text-[9px] font-medium tracking-wide">Download Native APK</p>
+                                </div>
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-emerald-500/50 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                    </a>
+
                     <footer className="mt-8 text-center opacity-20 pointer-events-none">
                         <p className="text-[9px] uppercase tracking-[0.6em] text-white">© 2026 Thread Sense Intelligence</p>
                     </footer>
                 </motion.div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
