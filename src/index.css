@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --neon-cyan: #00f3ff;
+    --neon-purple: #bc13fe;
+    --neon-pink: #ff00ff;
+    --neon-green: #39ff14;
+    --bg-dark: #030303;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+@layer base {
+    body {
+        @apply bg-[#030303] text-zinc-100 font-['Plus_Jakarta_Sans'] antialiased overflow-x-hidden selection:bg-cyan-500/30 selection:text-cyan-200;
+        background-image:
+            radial-gradient(circle at 0% 0%, rgba(0, 243, 255, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 100% 100%, rgba(188, 19, 254, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(255, 0, 255, 0.02) 0%, transparent 100%);
+        background-attachment: fixed;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    .font-heading {
+        @apply font-['Outfit'] tracking-tight;
+    }
+}
+
+@layer components {
+    .glass-panel {
+        @apply bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[2rem] relative overflow-hidden transition-all duration-500;
+        box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .glass-panel:hover {
+        @apply border-white/10;
+        box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 243, 255, 0.05);
+    }
+
+    .neon-border-cyan {
+        @apply border border-cyan-500/30;
+        box-shadow: 0 0 15px rgba(0, 243, 255, 0.1), inset 0 0 15px rgba(0, 243, 255, 0.05);
+    }
+
+    .neon-border-purple {
+        @apply border border-purple-500/30;
+        box-shadow: 0 0 15px rgba(188, 19, 254, 0.1), inset 0 0 15px rgba(188, 19, 254, 0.05);
+    }
+
+    .cyber-input {
+        @apply w-full bg-white/[0.03] border border-white/5 rounded-2xl px-6 py-4 outline-none transition-all duration-300 font-['JetBrains_Mono'] text-sm text-cyan-50 placeholder:text-zinc-600;
+    }
+
+    .cyber-input:focus {
+        @apply border-cyan-500/50 bg-white/[0.05];
+        box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+    }
+
+    .btn-primary {
+        @apply px-10 py-4 bg-white text-black font-bold rounded-2xl active:scale-95 transition-all duration-500 uppercase tracking-[0.2em] text-xs relative overflow-hidden;
+    }
+
+    .btn-primary::before {
+        content: '';
+        @apply absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 opacity-0 transition-opacity duration-500;
+    }
+
+    .btn-primary:hover {
+        @apply text-white scale-105;
+        box-shadow: 0 0 40px rgba(0, 243, 255, 0.4);
+    }
+
+    .btn-primary:hover::before {
+        @apply opacity-100;
+    }
+
+    .btn-primary span {
+        @apply relative z-10;
+    }
+
+    .label-tech {
+        @apply text-[10px] font-black uppercase tracking-[0.4em] text-cyan-400 mb-3 block opacity-80;
+    }
+
+    .h1-glow {
+        @apply text-6xl md:text-8xl font-black tracking-tighter text-white;
+        text-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+    }
+
+    .neon-text-cyan {
+        @apply text-[#00f3ff];
+        text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+    }
+
+    .neon-text-purple {
+        @apply text-[#bc13fe];
+        text-shadow: 0 0 10px rgba(188, 19, 254, 0.5);
+    }
+
+    .neon-glow-cyan {
+        box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+    }
+
+    .neon-glow-purple {
+        box-shadow: 0 0 20px rgba(188, 19, 254, 0.3);
+    }
+
+    .card-stat {
+        @apply p-6 glass-panel flex flex-col items-center justify-center text-center space-y-2;
+    }
+}
+
+@keyframes scanline {
+    0% {
+        transform: translateY(-100%);
+    }
+
+    100% {
+        transform: translateY(1000%);
+    }
+}
+
+.scanline {
+    width: 100%;
+    height: 100px;
+    z-index: 1;
+    background: linear-gradient(0deg, rgba(0, 243, 255, 0) 0%, rgba(0, 243, 255, 0.05) 50%, rgba(0, 243, 255, 0) 100%);
+    opacity: 0.1;
+    position: absolute;
+    bottom: 100%;
+    animation: scanline 10s linear infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full hover:bg-cyan-500/50 transition-colors;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+}
+
+.typing-cursor::after {
+    content: '|';
+    @apply animate-pulse text-cyan-400 ml-1 font-bold;
+}

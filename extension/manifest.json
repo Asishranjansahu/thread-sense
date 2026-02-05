@@ -1,0 +1,46 @@
+{
+    "manifest_version": 3,
+    "name": "ThreadSense",
+    "version": "1.0",
+    "author": "Asish Ranjan Sahu",
+    "description": "Summarize Reddit threads instantly",
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "contextMenus",
+        "storage"
+    ],
+    "externally_connectable": {
+        "matches": [
+            "http://localhost:5173/*"
+        ]
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
+    "host_permissions": [
+        "http://localhost:5050/*",
+        "https://*/*"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.reddit.com/*"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "css": [
+                "content.css"
+            ]
+        }
+    ]
+}

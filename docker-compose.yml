@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # The Main App (Frontend + Backend)
+  app:
+    build: .
+    ports:
+      - "5050:5050"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/threadsense
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      - mongo
+      - ollama
+    restart: always
+
+  # Database
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+  # AI Service
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # If you have a GPU, uncomment these lines:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    restart: always
+
+volumes:
+  mongo_data:
+  ollama_data:

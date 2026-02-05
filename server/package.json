@@ -1,0 +1,15 @@
+{
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "discord.js": "^14.25.1",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2",
+    "stripe": "^20.3.0",
+    "web-push": "^3.6.7"
+  }
+}
