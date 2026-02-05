@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import jsPDF from "jspdf";
 import { Doughnut, Line } from "react-chartjs-2";
 import { motion, AnimatePresence } from "framer-motion";
@@ -672,7 +672,7 @@ function App() {
   if (loading) return null; // Or a loading spinner
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         {/* Public Root: Welcome Page if not logged in, otherwise redirect to Dashboard */}
         <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Welcome />} />
@@ -701,7 +701,7 @@ function App() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

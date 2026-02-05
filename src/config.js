@@ -1,1 +1,1 @@
-export const API = "https://slow-bars-shop.loca.lt"; // TUNNEL URL for Mobile Testing
+export const API = "https://thread-sense-api.onrender.com";

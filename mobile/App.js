@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, StatusBar } from 'react-native';
 
 // For local testing on your phone, use your computer's IP:
-const API = "https://slow-bars-shop.loca.lt";
+const API = "https://thread-sense-api.onrender.com";
 
 export default function App() {
     const [url, setUrl] = useState("");
