@@ -224,10 +224,8 @@ export default function Login() {
                     </div>
 
                     {/* Android App Download */}
-                    <a
-                        href="#" // REPLACE WITH YOUR APK LINK (e.g., Google Drive link)
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <Link
+                        to="/install-guide"
                         className="mt-4 block bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 py-4 px-6 rounded-2xl backdrop-blur-lg hover:border-emerald-500/50 transition-all group"
                     >
                         <div className="flex items-center justify-between">
@@ -242,7 +240,7 @@ export default function Login() {
                             </div>
                             <ArrowRight className="w-4 h-4 text-emerald-500/50 group-hover:translate-x-1 transition-transform" />
                         </div>
-                    </a>
+                    </Link>
 
                     <footer className="mt-8 text-center opacity-20 pointer-events-none">
                         <p className="text-[9px] uppercase tracking-[0.6em] text-white">© 2026 Thread Sense Intelligence</p>
