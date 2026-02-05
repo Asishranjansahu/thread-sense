@@ -36,7 +36,7 @@ export default function InstallGuide() {
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50"></div>
 
                     <a
-                        href="https://drive.google.com/file/d/YOUR_FILE_ID_HERE/view" // Placeholder
+                        href="https://drive.google.com/file/d/15xWNwTe74mHaSnc1Dd3GsrOmPqbZKn9m/view?usp=sharing"
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex flex-col items-center justify-center gap-4 bg-emerald-500 hover:bg-emerald-400 text-black py-6 px-12 rounded-2xl transition-all hover:scale-105 shadow-[0_0_30px_rgba(16,185,129,0.3)] group-hover:shadow-[0_0_50px_rgba(16,185,129,0.5)]"
