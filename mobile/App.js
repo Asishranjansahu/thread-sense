@@ -1,9 +1,82 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, StatusBar, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+    StyleSheet,
+    Text,
+    View,
+    TextInput,
+    TouchableOpacity,
+    ScrollView,
+    ActivityIndicator,
+    StatusBar,
+    SafeAreaView,
+    ImageBackground,
+    Dimensions,
+    Animated
+} from 'react-native';
 
+const { width, height } = Dimensions.get('window');
 const API = "https://thread-sense-api.onrender.com";
 
+// --- WELCOME SCREEN COMPONENT ---
+const WelcomeScreen = ({ onStart }) => {
+    const fadeAnim = useState(new Animated.Value(0))[0];
+    const slideAnim = useState(new Animated.Value(20))[0];
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 1000,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 800,
+                useNativeDriver: true,
+            })
+        ]).start();
+    }, []);
+
+    return (
+        <View style={styles.welcomeContainer}>
+            <ImageBackground
+                source={require('./assets/splash.png')}
+                style={styles.welcomeBg}
+                blurRadius={2}
+            >
+                <View style={styles.welcomeOverlay}>
+                    <Animated.View style={[styles.welcomeContent, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+                        <View style={styles.logoRing}>
+                            <View style={styles.logoInner} />
+                        </View>
+
+                        <Text style={styles.welcomeBrand}>THREAD<Text style={styles.cyanText}>SENSE</Text></Text>
+                        <Text style={styles.welcomeSlogan}>Neural Intelligence Extraction Platform</Text>
+
+                        <View style={styles.welcomeSpacer} />
+
+                        <TouchableOpacity style={styles.instagramButton} onPress={onStart}>
+                            <Text style={styles.instagramButtonText}>GET STARTED</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.loginLink}>
+                            <Text style={styles.loginLinkText}>Already an operative? <Text style={styles.cyanText}>Log In</Text></Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+
+                    <View style={styles.welcomeFooter}>
+                        <Text style={styles.fromCompany}>FROM</Text>
+                        <Text style={styles.companyName}>ANTIGRAVITY SYSTEMS</Text>
+                    </View>
+                </View>
+            </ImageBackground>
+        </View>
+    );
+};
+
+// --- MAIN APP COMPONENT ---
 export default function App() {
+    const [showWelcome, setShowWelcome] = useState(true);
     const [url, setUrl] = useState("");
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -32,13 +105,19 @@ export default function App() {
         setLoading(false);
     };
 
+    if (showWelcome) {
+        return <WelcomeScreen onStart={() => setShowWelcome(false)} />;
+    }
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="light-content" />
             <View style={styles.container}>
                 {/* Header Section */}
                 <View style={styles.header}>
-                    <Text style={styles.title}>THREAD<Text style={styles.cyanText}>SENSE</Text></Text>
+                    <TouchableOpacity onPress={() => setShowWelcome(true)}>
+                        <Text style={styles.titleSmall}>THREAD<Text style={styles.cyanText}>SENSE</Text></Text>
+                    </TouchableOpacity>
                     <View style={styles.statusBadge}>
                         <View style={styles.pulseDot} />
                         <Text style={styles.statusText}>ENCRYPTED CHANNEL STABLE</Text>
@@ -145,16 +224,115 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: 20,
     },
+    // Welcome Styles
+    welcomeContainer: {
+        flex: 1,
+        backgroundColor: '#000',
+    },
+    welcomeBg: {
+        flex: 1,
+        width: width,
+        height: height,
+    },
+    welcomeOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 30,
+    },
+    welcomeContent: {
+        alignItems: 'center',
+        width: '100%',
+    },
+    logoRing: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        borderWidth: 2,
+        borderColor: '#00f3ff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 30,
+        shadowColor: '#00f3ff',
+        shadowRadius: 15,
+        shadowOpacity: 0.5,
+    },
+    logoInner: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#00f3ff',
+    },
+    welcomeBrand: {
+        fontSize: 48,
+        fontWeight: '900',
+        color: '#fff',
+        letterSpacing: -2,
+    },
+    welcomeSlogan: {
+        color: '#888',
+        fontSize: 14,
+        marginTop: 10,
+        textAlign: 'center',
+        letterSpacing: 1,
+    },
+    welcomeSpacer: {
+        height: 80,
+    },
+    instagramButton: {
+        backgroundColor: '#00f3ff',
+        width: '100%',
+        height: 55,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#00f3ff',
+        shadowRadius: 10,
+        shadowOpacity: 0.3,
+    },
+    instagramButtonText: {
+        color: '#000',
+        fontSize: 14,
+        fontWeight: '900',
+        letterSpacing: 2,
+    },
+    loginLink: {
+        marginTop: 25,
+    },
+    loginLinkText: {
+        color: '#666',
+        fontSize: 13,
+    },
+    welcomeFooter: {
+        position: 'absolute',
+        bottom: 50,
+        alignItems: 'center',
+    },
+    fromCompany: {
+        color: '#444',
+        fontSize: 10,
+        fontWeight: 'bold',
+        letterSpacing: 3,
+    },
+    companyName: {
+        color: '#888',
+        fontSize: 12,
+        fontWeight: '900',
+        marginTop: 5,
+        letterSpacing: 1,
+    },
+    // App Styles
     header: {
         alignItems: 'center',
         marginTop: 40,
         marginBottom: 30,
     },
-    title: {
-        fontSize: 42,
+    titleSmall: {
+        fontSize: 24,
         fontWeight: '900',
         color: '#fff',
-        letterSpacing: -2,
+        letterSpacing: -1,
     },
     cyanText: {
         color: '#00f3ff',
