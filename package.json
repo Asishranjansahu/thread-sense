@@ -26,13 +26,19 @@
       "target": [
         "AppImage"
       ]
-    }
+    },
+    "files": [
+      "dist/**/*",
+      "electron-main.cjs",
+      "package.json"
+    ]
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "chart.js": "^4.5.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
+    "electron-is-dev": "^2.0.0",
     "framer-motion": "^12.31.0",
     "jsonwebtoken": "^9.0.3",
     "jspdf": "^2.5.1",
@@ -48,7 +54,6 @@
     "autoprefixer": "^10.4.24",
     "electron": "^34.3.0",
     "electron-builder": "^24.9.1",
-    "electron-is-dev": "^2.0.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
     "vercel": "^50.11.0",
