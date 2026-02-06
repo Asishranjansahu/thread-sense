@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
+import Groq from "groq-sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import authRoutes from "./routes/auth.js";
 import threadRoutes from "./routes/threads.js";
@@ -157,27 +158,27 @@ async function getComments(url) {
 }
 
 /* 🔥 HYBRID AI ENGINE (OpenAI + Ollama) */
-/* 🔥 HYBRID AI ENGINE (Google Gemini) */
+/* 🔥 HYBRID AI ENGINE (Groq - Llama 3) */
 async function askAI(prompt) {
-  // Use Env Var or Hardcoded Fallback Key
-  const geminiKey = process.env.GEMINI_API_KEY || "AIzaSyCP27tFvRuGDH45jRfETMSNtQ2lIKGNf28";
+  // Use Environment Variable for Security (Do NOT hardcode keys!)
+  const groqKey = process.env.GROQ_API_KEY;
 
-  if (!geminiKey) {
-    return "⚠️ AI Offline: Missing Google Gemini API Key. Please add GEMINI_API_KEY to Render.";
+  if (!groqKey) {
+    return "⚠️ AI Offline: Missing Groq API Key. Please add GROQ_API_KEY to Render Environment Variables.";
   }
 
   try {
-    console.log("✨ Using Google Gemini AI...");
-    const genAI = new GoogleGenerativeAI(geminiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    console.log("⚡ Using Groq AI (Llama 3)...");
+    const groq = new Groq({ apiKey: groqKey });
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama3-70b-8192",
+    });
 
-    return text;
+    return completion.choices[0]?.message?.content || "No response generated.";
   } catch (e) {
-    console.error("Gemini Failed:", e.message);
+    console.error("Groq Failed:", e.message);
     return `⚠️ AI Error: ${e.message}`;
   }
 }
