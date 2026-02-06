@@ -29,9 +29,29 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // DB Connection
-mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/threadsense")
-  .then(() => console.log("🔥 MongoDB Connected"))
-  .catch(err => console.error("MongoDB Error:", err));
+// DB Connection Strategy
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000, // Fail fast (5s) if IP not whitelisted
+    });
+    console.log(`🔥 MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`❌ Cloud DB Error: ${error.message}`);
+    console.log("⚠️  HINT: Enable 'Network Access' (IP Whitelist) in MongoDB Atlas.");
+    console.log("🔄 Switching to Local MongoDB Fallback...");
+
+    try {
+      // Fallback to local DB
+      await mongoose.connect("mongodb://127.0.0.1:27017/threadsense");
+      console.log("🏠 Local MongoDB Connected (Fallback Mode)");
+    } catch (localErr) {
+      console.error("❌ Local DB Failed. Ensure MongoDB is running or whitelist IP in Cloud.");
+    }
+  }
+};
+
+connectDB();
 
 // Routes
 app.use("/api/auth", authRoutes);

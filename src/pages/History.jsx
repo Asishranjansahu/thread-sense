@@ -61,7 +61,7 @@ export default function History() {
     };
 
     return (
-        <div className="min-h-screen py-10 px-4 md:px-8 max-w-7xl mx-auto space-y-8 relative overflow-hidden">
+        <div className="min-h-screen py-6 md:py-10 px-4 md:px-8 max-w-7xl mx-auto space-y-8 relative overflow-hidden">
             {/* Background */}
             <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 bg-black">
                 <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl animate-pulse"></div>
@@ -75,7 +75,7 @@ export default function History() {
                     </div>
                 </div>
 
-                <div className="md:pt-12 relative w-full md:w-96 group">
+                <div className="pt-6 md:pt-12 relative w-full md:w-96 group">
                     <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-2xl blur opacity-10 group-focus-within:opacity-30 transition-opacity"></div>
                     <input
                         type="text"
@@ -149,9 +149,9 @@ export default function History() {
                                     )}
                                 </div>
 
-                                <a href={thread.url} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold text-zinc-200 hover:text-cyan-400 transition-colors flex items-center gap-2">
+                                <a href={thread.url} target="_blank" rel="noopener noreferrer" className="text-sm md:text-lg font-semibold text-zinc-200 hover:text-cyan-400 transition-colors flex items-center gap-2 break-all">
                                     {thread.url}
-                                    <ExternalLink className="w-4 h-4 opacity-50" />
+                                    <ExternalLink className="w-4 h-4 opacity-50 shrink-0" />
                                 </a>
 
                                 <p className="text-zinc-400 text-sm line-clamp-2 leading-relaxed">
@@ -175,7 +175,7 @@ export default function History() {
 
                             <button
                                 onClick={() => deleteThread(thread._id)}
-                                className="absolute top-4 right-4 p-2 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                className="absolute top-4 right-4 p-2 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100"
                                 title="Delete Scan"
                             >
                                 <Trash2 className="w-4 h-4" />

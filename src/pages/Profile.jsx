@@ -22,7 +22,7 @@ export default function Profile() {
     }, [user]);
 
     return (
-        <div className="min-h-screen py-20 px-4 md:px-8 max-w-5xl mx-auto space-y-12 relative overflow-hidden">
+        <div className="min-h-screen py-6 md:py-20 px-4 md:px-8 max-w-5xl mx-auto space-y-12 relative overflow-hidden">
             {/* Background */}
             <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 bg-black">
                 <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-600/5 rounded-full blur-[120px] animate-pulse"></div>
@@ -45,16 +45,16 @@ export default function Profile() {
                             )}
                         </div>
                     </div>
-                    <div>
-                        <h1 className="text-5xl font-black tracking-tighter uppercase text-white leading-none">
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-white leading-none truncate">
                             {user?.username}
                         </h1>
-                        <div className="flex items-center gap-3 mt-4">
-                            <span className="inline-flex items-center gap-2 text-[10px] font-black bg-cyan-500/10 text-cyan-400 px-3 py-1 rounded-full border border-cyan-500/20 uppercase tracking-widest">
+                        <div className="flex flex-wrap items-center gap-3 mt-4">
+                            <span className="inline-flex items-center gap-2 text-[10px] font-black bg-cyan-500/10 text-cyan-400 px-3 py-1 rounded-full border border-cyan-500/20 uppercase tracking-widest whitespace-nowrap">
                                 <Activity className="w-3 h-3 animate-pulse" />
-                                Transmitting Status: ACTIVE
+                                Active
                             </span>
-                            <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-widest">Neural Link: SECURE</span>
+                            <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-widest whitespace-nowrap">Neural Link: SECURE</span>
                         </div>
                     </div>
                 </motion.div>
@@ -80,7 +80,7 @@ export default function Profile() {
                     animate={{ opacity: 1, y: 0 }}
                     className="lg:col-span-8 space-y-8"
                 >
-                    <div className="glass-panel p-10 space-y-10">
+                    <div className="glass-panel p-6 md:p-10 space-y-10">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-6">
                                 <label className="label-tech">Communication Channels</label>
@@ -140,7 +140,7 @@ export default function Profile() {
                     transition={{ delay: 0.1 }}
                     className="lg:col-span-4 space-y-8"
                 >
-                    <div className="glass-panel p-8 space-y-6 bg-gradient-to-br from-purple-500/5 to-transparent border-purple-500/20">
+                    <div className="glass-panel p-6 md:p-8 space-y-6 bg-gradient-to-br from-purple-500/5 to-transparent border-purple-500/20">
                         <div className="flex items-center gap-2">
                             <Building className="w-4 h-4 text-purple-400" />
                             <span className="label-tech text-purple-400">Assigned Organization</span>
@@ -178,7 +178,7 @@ export default function Profile() {
                         )}
                     </div>
 
-                    <div className="glass-panel p-8 space-y-6">
+                    <div className="glass-panel p-6 md:p-8 space-y-6">
                         <div className="flex items-center gap-2">
                             <Zap className="w-4 h-4 text-cyan-400" />
                             <span className="label-tech text-cyan-400">Harvesting Perks</span>

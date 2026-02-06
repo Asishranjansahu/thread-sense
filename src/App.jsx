@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from "react";
-import { HashRouter, Routes, Route, Navigate, Link, useLocation, Outlet } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, Link, useLocation, Outlet, useNavigate } from "react-router-dom";
+import { App as CapacitorApp } from '@capacitor/app';
 import jsPDF from "jspdf";
 import { Doughnut, Line } from "react-chartjs-2";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,40 +22,34 @@ import { PaymentSuccess, PaymentCancel } from "./pages/PaymentStatus";
 import { Youtube, Twitter, MessageSquare, Shield, Zap, Target, Search, Clock, ExternalLink, Users, LayoutDashboard, CreditCard, LogOut, Bell, Menu, ChevronLeft, ChevronRight, Instagram, Facebook, Globe, Loader2 } from "lucide-react";
 import { API } from "./config";
 import SplashLoader from "./components/SplashLoader";
+import ThreadSenseLogo3D from "./components/ThreadSenseLogo3D";
+
+// --- CONSTANTS ---
+const MENU_ITEMS = [
+  { name: "Terminal", path: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" />, color: "text-cyan-400" },
+  { name: "Operatives", path: "/target-search", icon: <Target className="w-5 h-5" />, color: "text-red-500" },
+  { name: "Archives", path: "/history", icon: <Clock className="w-5 h-5" />, color: "text-purple-400" },
+  { name: "Team", path: "/organization", icon: <Users className="w-5 h-5" />, color: "text-zinc-400" },
+  { name: "Upgrade", path: "/pricing", icon: <CreditCard className="w-5 h-5" />, color: "text-yellow-500" },
+];
 
 // --- SIDEBAR COMPONENT ---
 function Sidebar({ isCollapsed, toggleSidebar }) {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
 
-  const menuItems = [
-    { name: "Terminal", path: "/", icon: <LayoutDashboard className="w-5 h-5" />, color: "text-cyan-400" },
-    { name: "Operatives", path: "/target-search", icon: <Target className="w-5 h-5" />, color: "text-red-500" },
-    { name: "Archives", path: "/history", icon: <Clock className="w-5 h-5" />, color: "text-purple-400" },
-    { name: "Team", path: "/organization", icon: <Users className="w-5 h-5" />, color: "text-zinc-400" },
-    { name: "Upgrade", path: "/pricing", icon: <CreditCard className="w-5 h-5" />, color: "text-yellow-500" },
-  ];
-
   return (
     <motion.aside
       initial={false}
       animate={{ width: isCollapsed ? 80 : 256 }}
-      className="fixed left-0 top-0 h-screen bg-black/50 backdrop-blur-3xl border-r border-white/5 flex flex-col items-center py-10 z-50 overflow-hidden"
+      className="hidden md:flex fixed left-0 top-0 h-screen bg-black/50 backdrop-blur-3xl border-r border-white/5 flex-col items-center py-10 z-50 overflow-hidden"
     >
       <div className="w-full px-4 mb-12 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {!isCollapsed && (
             <>
-              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(6,182,212,0.3)] bg-zinc-900 flex items-center justify-center">
-                <img
-                  src="/logo.png"
-                  alt="TS"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.parentElement.innerHTML = '<span class="text-cyan-500 font-black">TS</span>';
-                  }}
-                />
+              <div className="w-14 h-14 flex items-center justify-center -ml-2">
+                <ThreadSenseLogo3D />
               </div>
               <span className="text-[10px] font-black tracking-[0.2em] text-cyan-400 uppercase">THREAD SENSE</span>
             </>
@@ -70,7 +65,7 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
       </div>
 
       <nav className="flex-1 w-full px-4 space-y-4">
-        {menuItems.map((item) => (
+        {MENU_ITEMS.map((item) => (
           <Link
             key={item.name}
             to={item.path}
@@ -104,6 +99,56 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
   );
 }
 
+// --- MOBILE COMPONENTS ---
+function MobileTopBar() {
+  const { logout } = useContext(AuthContext);
+
+  return (
+    <div className="md:hidden fixed top-0 left-0 right-0 h-auto min-h-16 pt-[env(safe-area-inset-top)] bg-black/80 backdrop-blur-xl border-b border-white/5 z-50 flex items-center justify-between px-4 pb-2">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 flex items-center justify-center">
+          <ThreadSenseLogo3D />
+        </div>
+        <span className="text-[10px] font-black tracking-[0.2em] text-cyan-400 uppercase">THREAD SENSE</span>
+      </div>
+      <button
+        onClick={logout}
+        className="p-2 rounded-lg text-red-500/50 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+      >
+        <LogOut className="w-5 h-5" />
+      </button>
+    </div>
+  );
+}
+
+function MobileNav() {
+  const location = useLocation();
+
+  return (
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#030303]/90 backdrop-blur-xl border-t border-white/5 z-50 px-6 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="flex justify-between items-center max-w-sm mx-auto">
+        {MENU_ITEMS.map((item) => (
+          <Link
+            key={item.name}
+            to={item.path}
+            className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${location.pathname === item.path
+              ? 'text-white scale-110'
+              : 'text-zinc-600 hover:text-zinc-400'
+              }`}
+          >
+            <div className={`${location.pathname === item.path ? item.color : 'currentColor'}`}>
+              {item.icon}
+            </div>
+            {location.pathname === item.path && (
+              <span className="w-1 h-1 rounded-full bg-cyan-500 shadow-[0_0_5px_#00f3ff]"></span>
+            )}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // --- LAYOUT COMPONENT ---
 function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -112,23 +157,32 @@ function Layout() {
   return (
     <div className="flex bg-black min-h-screen">
       <Sidebar isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
+
+      <MobileTopBar />
+
       <div
-        className="flex-1 relative transition-[padding] duration-300 ease-in-out"
-        style={{ paddingLeft: isCollapsed ? 80 : 256 }}
+        className="flex-1 relative transition-[padding] duration-300 ease-in-out md:pl-[var(--sidebar-width)] pt-[calc(4rem+env(safe-area-inset-top))] md:pt-0 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0"
+        style={{
+          '--sidebar-width': isCollapsed ? '80px' : '256px',
+        }}
       >
-        <div className="scanline opacity-10 pointer-events-none"></div>
+        <div className="hidden md:block absolute left-0 top-0 bottom-0 transition-all duration-300 w-[var(--sidebar-width)] pointer-events-none" />
+
+        <div className="scanline opacity-10 pointer-events-none fixed inset-0 z-0"></div>
         <AnimatePresence>
           <motion.main
             key={location.pathname}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.1 }}
-            className="w-full relative"
+            className="w-full relative z-10"
           >
             <Outlet />
           </motion.main>
         </AnimatePresence>
       </div>
+
+      <MobileNav />
     </div>
   );
 }
@@ -457,7 +511,7 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen py-10 px-4 md:px-8 max-w-7xl mx-auto space-y-12 relative z-10 overflow-hidden">
+    <div className="min-h-screen py-6 md:py-10 px-4 md:px-8 max-w-7xl mx-auto space-y-12 relative z-10 overflow-hidden">
 
       <header className="flex flex-col items-center justify-center space-y-8 text-center relative pt-12">
         <div className="flex items-center gap-6 absolute top-0 right-0">
@@ -528,7 +582,7 @@ function Dashboard() {
             className="grid grid-cols-1 md:grid-cols-12 gap-10"
           >
             <div className="md:col-span-8 space-y-10">
-              <div className="glass-panel p-10 min-h-[600px] border-white/5">
+              <div className="glass-panel p-6 md:p-10 min-h-[600px] border-white/5">
                 <div className="flex justify-between items-start mb-12 pb-8 border-b border-white/5">
                   <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-2xl border ${platform === 'youtube' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
@@ -627,7 +681,7 @@ function Dashboard() {
 
             <div className="md:col-span-4 space-y-10">
               {/* SENTIMENT TREND CHART */}
-              <div className="glass-panel p-8">
+              <div className="glass-panel p-6 md:p-8">
                 <div className="flex justify-between items-center mb-6">
                   <span className="label-tech text-cyan-400">Pulse Monitor</span>
                   <span className="text-[10px] text-zinc-500 font-mono">LIVE</span>
@@ -657,7 +711,7 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="glass-panel p-10 flex flex-col items-center text-center">
+              <div className="glass-panel p-6 md:p-10 flex flex-col items-center text-center">
                 <span className="label-tech text-purple-400">Atmosphere Score</span>
                 <div className="relative w-48 h-48 mt-8 group">
                   <div className="absolute inset-0 rounded-full border border-white/5 animate-ping opacity-20 group-hover:bg-cyan-500/5 group-hover:border-cyan-500/20 transition-all"></div>
@@ -690,7 +744,7 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="glass-panel p-8 flex flex-col h-[600px] border-cyan-500/5">
+              <div className="glass-panel p-6 md:p-8 flex flex-col h-[600px] border-cyan-500/5">
                 <div className="flex justify-between items-center mb-8">
                   <span className="label-tech text-green-400">Neural Query</span>
                   <button onClick={() => setChatHistory([])} className="p-2 hover:bg-white/5 rounded-lg transition-all">
@@ -735,6 +789,37 @@ function Dashboard() {
 
 
 
+// --- BACK BUTTON HANDLER ---
+function BackButtonHandler() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleBackButton = async () => {
+      // Define routes where back button should exit the app
+      const exitRoutes = ['/', '/login', '/signup', '/welcome', '/dashboard'];
+
+      // If we are on an exit route, close the app
+      if (exitRoutes.includes(location.pathname)) {
+        CapacitorApp.exitApp();
+      } else {
+        // Otherwise go back in history
+        navigate(-1);
+      }
+    };
+
+    // Add listner
+    const listener = CapacitorApp.addListener('backButton', handleBackButton);
+
+    // Cleanup listener on component unmount or location change
+    return () => {
+      listener.then(handler => handler.remove());
+    };
+  }, [navigate, location]);
+
+  return null;
+}
+
 // --- MAIN APP COMPONENT ---
 function App() {
   const { user, loading } = useContext(AuthContext);
@@ -743,6 +828,7 @@ function App() {
 
   return (
     <HashRouter>
+      <BackButtonHandler />
       <Routes>
         {/* Public Root: Welcome Page if not logged in, otherwise redirect to Dashboard */}
         <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Welcome />} />

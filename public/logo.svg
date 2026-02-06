@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <filter id="glow-strong" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <linearGradient id="brain-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f3ff" />
+      <stop offset="50%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#bc13fe" />
+    </linearGradient>
+  </defs>
+
+  <!-- Detailed Brain Convolutions Left -->
+  <path d="M256,100 
+           C210,100 170,120 150,150 
+           C130,140 100,160 90,190 
+           C70,220 80,260 100,280 
+           C90,310 110,350 140,370 
+           C170,410 210,410 240,390 
+           L256,380" 
+           fill="none" stroke="url(#brain-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow-strong)" />
+           
+  <!-- Detailed Brain Convolutions Right -->
+  <path d="M256,100 
+           C302,100 342,120 362,150 
+           C382,140 412,160 422,190 
+           C442,220 432,260 412,280 
+           C422,310 402,350 372,370 
+           C342,410 302,410 272,390 
+           L256,380" 
+           fill="none" stroke="url(#brain-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow-strong)" />
+
+  <!-- Inner brain details (Squiggles) -->
+  <path d="M160,180 Q190,160 210,200 T240,240 T210,300 M352,180 Q322,160 302,200 T272,240 T302,300" 
+        fill="none" stroke="#00f3ff" stroke-width="4" opacity="0.6" stroke-linecap="round" />
+
+  <!-- Central Connection Node -->
+  <circle cx="256" cy="260" r="60" fill="#030303" stroke="url(#brain-grad)" stroke-width="4" filter="url(#glow-strong)" />
+  
+  <!-- "TS" Text -->
+  <text x="256" y="285" font-family="Arial, sans-serif" font-weight="900" font-size="80" text-anchor="middle" fill="#ffffff" filter="url(#glow-strong)">TS</text>
+
+  <!-- Circuit dots -->
+  <circle cx="150" cy="150" r="4" fill="white"><animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite"/></circle>
+  <circle cx="362" cy="150" r="4" fill="white"><animate attributeName="opacity" values="0;1;0" dur="2s" begin="1s" repeatCount="indefinite"/></circle>
+  <circle cx="140" cy="370" r="4" fill="white"><animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite"/></circle>
+  <circle cx="372" cy="370" r="4" fill="white"><animate attributeName="opacity" values="0;1;0" dur="3s" begin="1.5s" repeatCount="indefinite"/></circle>
+
+</svg>

@@ -89,7 +89,7 @@ export default function TargetSearch() {
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="glass-panel p-10 space-y-8 border-red-500/20 relative"
+                            className="glass-panel p-6 md:p-10 space-y-8 border-red-500/20 relative"
                         >
                             <div className="absolute top-4 right-6 text-[10px] font-black text-red-500/40 uppercase tracking-[0.5em]">CONFIDENTIAL // LEVEL 4</div>
 

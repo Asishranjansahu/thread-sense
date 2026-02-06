@@ -66,7 +66,7 @@ export default function Pricing() {
                 <motion.h1
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-6xl font-black tracking-tighter"
+                    className="text-4xl md:text-6xl font-black tracking-tighter"
                 >
                     UPGRADE <span className="text-cyan-500">CLEARANCE</span>
                 </motion.h1>
@@ -82,7 +82,7 @@ export default function Pricing() {
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className={`glass-panel p-12 flex flex-col justify-between relative group ${plan.active ? 'border-cyan-500/30' : 'border-white/5'}`}
+                        className={`glass-panel p-8 md:p-12 flex flex-col justify-between relative group ${plan.active ? 'border-cyan-500/30' : 'border-white/5'}`}
                     >
                         {plan.active && (
                             <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-cyan-500 text-black text-[10px] font-black uppercase tracking-widest rounded-full shadow-[0_0_20px_rgba(0,243,255,0.4)]">

@@ -8,7 +8,7 @@ export function PaymentSuccess() {
             <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="glass-panel p-16 max-w-lg w-full space-y-8 border-cyan-500/30"
+                className="glass-panel p-8 md:p-16 max-w-lg w-full space-y-8 border-cyan-500/30"
             >
                 <div className="flex justify-center">
                     <div className="w-24 h-24 bg-cyan-500/20 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(0,243,255,0.2)]">
@@ -31,7 +31,7 @@ export function PaymentCancel() {
             <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="glass-panel p-16 max-w-lg w-full space-y-8 border-red-500/30"
+                className="glass-panel p-8 md:p-16 max-w-lg w-full space-y-8 border-red-500/30"
             >
                 <div className="flex justify-center">
                     <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(239,68,68,0.2)]">

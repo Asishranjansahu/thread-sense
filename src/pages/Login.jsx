@@ -5,6 +5,7 @@ import { User, Lock, ArrowRight, Loader, Phone, Mail, Download } from "lucide-re
 import { motion, AnimatePresence } from "framer-motion";
 import { GoogleLogin } from "@react-oauth/google";
 import { API } from "../config";
+import ThreadSenseLogo3D from "../components/ThreadSenseLogo3D";
 
 export default function Login() {
     const [loginMethod, setLoginMethod] = useState("email"); // 'email' or 'phone'
@@ -66,17 +67,8 @@ export default function Login() {
                     className="text-center"
                 >
                     <div className="relative inline-block mb-12">
-                        <div className="absolute inset-0 bg-cyan-500/20 blur-[60px] rounded-full animate-pulse"></div>
-                        <div className="relative w-64 h-64 rounded-[2rem] border border-white/10 shadow-2xl bg-zinc-900 flex items-center justify-center overflow-hidden">
-                            <img
-                                src="/logo.png"
-                                alt="TS"
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.parentElement.innerHTML = '<span class="text-cyan-500 text-6xl font-black">TS</span>';
-                                }}
-                            />
+                        <div className="relative w-64 h-64 flex items-center justify-center">
+                            <ThreadSenseLogo3D />
                         </div>
                     </div>
                     <h2 className="text-5xl font-black tracking-tighter text-white mb-4">
@@ -111,7 +103,7 @@ export default function Login() {
                         <p className="text-zinc-500 text-xs uppercase tracking-[0.3em] font-bold opacity-60">Authorize Operative</p>
                     </div>
 
-                    <div className="bg-white/[0.02] border border-white/5 p-8 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl relative overflow-hidden">
+                    <div className="bg-white/[0.02] border border-white/5 p-6 md:p-8 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-30"></div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">

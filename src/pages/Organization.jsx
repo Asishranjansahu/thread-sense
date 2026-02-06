@@ -95,7 +95,7 @@ export default function Organization() {
         <div className="min-h-screen py-20 px-4 md:px-8 max-w-6xl mx-auto space-y-12">
             <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-12">
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-                    <h1 className="text-5xl font-black tracking-tighter uppercase leading-none">Command Center</h1>
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase leading-none">Command Center</h1>
                     <p className="text-zinc-500 text-[10px] font-mono tracking-[0.5em] mt-2 italic uppercase">Team & Protocol Management</p>
                 </motion.div>
 
@@ -137,7 +137,7 @@ export default function Organization() {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="glass-panel p-20 text-center space-y-10 border-dashed border-zinc-800"
+                    className="glass-panel p-6 md:p-20 text-center space-y-10 border-dashed border-zinc-800"
                 >
                     <Building className="w-20 h-20 text-zinc-900 mx-auto" />
                     <div className="space-y-4">
@@ -168,7 +168,7 @@ export default function Organization() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="glass-panel p-8"
+                            className="glass-panel p-6 md:p-8"
                         >
                             <div className="flex items-center justify-between mb-10 pb-6 border-b border-white/5">
                                 <div className="space-y-1">
@@ -210,7 +210,7 @@ export default function Organization() {
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="glass-panel p-8 bg-gradient-to-br from-cyan-500/10 to-transparent border-cyan-500/20"
+                            className="glass-panel p-6 md:p-8 bg-gradient-to-br from-cyan-500/10 to-transparent border-cyan-500/20"
                         >
                             <div className="flex items-center gap-2 mb-4">
                                 <Zap className="w-4 h-4 text-cyan-400" />
@@ -226,7 +226,7 @@ export default function Organization() {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="glass-panel p-8"
+                            className="glass-panel p-6 md:p-8"
                         >
                             <span className="text-[10px] uppercase tracking-[0.3em] font-black text-purple-500">Shared Archives</span>
                             <div className="mt-4 flex items-baseline gap-2">

@@ -22,7 +22,7 @@ export default function InstallGuide() {
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full max-w-2xl z-10"
             >
-                <div className="text-center mb-12">
+                <div className="text-center mb-8 md:mb-12">
                     <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4">
                         Install <span className="text-emerald-500">Protocol</span>
                     </h1>
@@ -32,7 +32,7 @@ export default function InstallGuide() {
                 </div>
 
                 {/* Primary Action */}
-                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-3xl p-8 mb-12 text-center backdrop-blur-xl relative overflow-hidden group">
+                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-3xl p-6 md:p-8 mb-12 text-center backdrop-blur-xl relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50"></div>
 
                     <a
@@ -86,7 +86,7 @@ export default function InstallGuide() {
 
 function Step({ num, title, desc, icon }) {
     return (
-        <div className="flex items-start gap-6 p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-colors">
+        <div className="flex items-start gap-4 md:gap-6 p-4 md:p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] transition-colors">
             <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
                 {icon}
             </div>

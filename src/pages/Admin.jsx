@@ -48,25 +48,25 @@ export default function Admin() {
     );
 
     return (
-        <div className="min-h-screen py-20 px-4 md:px-12 max-w-7xl mx-auto space-y-12">
+        <div className="min-h-screen py-6 md:py-20 px-4 md:px-12 max-w-7xl mx-auto space-y-12">
             <header className="flex flex-col md:flex-row justify-between items-end gap-6 pt-12">
                 <div>
                     <span className="label-tech text-cyan-400">System Override / Admin Panel</span>
-                    <h1 className="text-5xl font-black tracking-tighter text-white uppercase italic">Command Central</h1>
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white uppercase italic">Command Central</h1>
                 </div>
             </header>
 
             {/* STATS GRID */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="card-stat neon-border-cyan p-10">
+                <div className="card-stat neon-border-cyan p-6 md:p-10">
                     <span className="text-5xl font-black text-white mb-2">{stats?.userCount || 0}</span>
                     <span className="label-tech mb-0">Total Biological Nodes</span>
                 </div>
-                <div className="card-stat neon-border-purple p-10">
+                <div className="card-stat neon-border-purple p-6 md:p-10">
                     <span className="text-5xl font-black text-white mb-2">{stats?.threadCount || 0}</span>
                     <span className="label-tech mb-0">Data Transmissions</span>
                 </div>
-                <div className="card-stat border-white/10 p-10">
+                <div className="card-stat border-white/10 p-6 md:p-10">
                     <span className="text-5xl font-black text-cyan-400 mb-2">99.9%</span>
                     <span className="label-tech mb-0">System Integrity</span>
                 </div>
@@ -75,7 +75,7 @@ export default function Admin() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                 {/* USERS TABLE */}
                 <div className="lg:col-span-8 space-y-8">
-                    <div className="glass-panel p-8 border-white/5">
+                    <div className="glass-panel p-6 md:p-8 border-white/5">
                         <h3 className="text-xl font-bold mb-8 uppercase tracking-widest flex items-center gap-3">
                             <div className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_10px_#00f3ff]"></div>
                             Active Node Directory
@@ -111,7 +111,7 @@ export default function Admin() {
 
                 {/* RECENT ACTIVITY */}
                 <div className="lg:col-span-4 space-y-8">
-                    <div className="glass-panel p-8 border-white/5 min-h-[500px]">
+                    <div className="glass-panel p-6 md:p-8 border-white/5 min-h-[500px]">
                         <h3 className="text-xl font-bold mb-8 uppercase tracking-widest flex items-center gap-3 text-purple-400">
                             <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_#bc13fe]"></div>
                             Raw Feed
