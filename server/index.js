@@ -157,15 +157,17 @@ async function getComments(url) {
 
 /* 🔥 HYBRID AI ENGINE (OpenAI + Ollama) */
 async function askAI(prompt) {
-  // 1. Try OpenAI if Key Exists (Cloud Deployment)
-  if (process.env.OPENAI_API_KEY) {
+  // 1. Try OpenAI (Cloud Deployment) - Use Env Var OR Hardcoded Backup
+  const openAIKey = process.env.OPENAI_API_KEY || "sk-proj-CHieRb2ATvirkRtR9TSNBb-EDAa1j0x1Z0caj_iNsZpTEAT7zIoXsJdViQJ";
+
+  if (openAIKey) {
     try {
       console.log("☁️ Using OpenAI (Cloud Mode)...");
       const r = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          "Authorization": `Bearer ${openAIKey}`
         },
         body: JSON.stringify({
           model: "gpt-4o-mini", // Cost-effective & fast
