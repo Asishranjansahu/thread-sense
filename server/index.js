@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import authRoutes from "./routes/auth.js";
 import threadRoutes from "./routes/threads.js";
 import notificationRoutes from "./routes/notifications.js";
@@ -156,73 +157,31 @@ async function getComments(url) {
 }
 
 /* 🔥 HYBRID AI ENGINE (OpenAI + Ollama) */
+/* 🔥 HYBRID AI ENGINE (Google Gemini) */
 async function askAI(prompt) {
-  // 1. Try OpenAI (Cloud Deployment) - Use Env Var OR Hardcoded Backup
-  const openAIKey = process.env.OPENAI_API_KEY || "sk-proj-CHieRb2ATvirkRtR9TSNBb-EDAa1j0x1Z0caj_iNsZpTEAT7zIoXsJdViQJ";
+  // Use Env Var or Hardcoded Fallback Key (Get this from user later if needed, but for now using a placeholder or waiting for user input. Wait, the user said "B", they didn't give me a key yet. I need to tell them to get a key. BUT, so the code validates, I will put a placeholder logic.)
+  // Actually, I should ask the user for the key. But to make the code "ready", I will write the logic.
+  // I will use a dummy key for now and tell the user to update it.
+  const geminiKey = process.env.GEMINI_API_KEY;
 
-  if (openAIKey) {
-    try {
-      console.log("☁️ Using OpenAI (Cloud Mode)...");
-      const r = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${openAIKey}`
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo", // Broader compatibility
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.7
-        })
-      });
-      const data = await r.json();
-      if (data.error) {
-        throw new Error("OpenAI Error: " + data.error.message);
-      }
-      if (data.choices && data.choices.length > 0) {
-        return data.choices[0].message.content;
-      } else {
-        throw new Error("OpenAI response missing choices.");
-      }
-    } catch (e) {
-      console.error("OpenAI Failed:", e.message);
-      // Return the actual error to the UI so the user knows WHY it failed (e.g. Quota/Key)
-      return `⚠️ AI Error: ${e.message}`;
-    }
+  if (!geminiKey) {
+    return "⚠️ AI Offline: Missing Google Gemini API Key. Please add GEMINI_API_KEY to Render.";
   }
 
-  // 2. Fallback to Local Ollama (Only if NOT in Production or if explicitly enabled)
-  // On Render, localhost:11434 won't exist, so we skip this to avoid timeouts unless we know it's there.
-  if (process.env.NODE_ENV !== 'production' || process.env.USE_LOCAL_OLLAMA === 'true') {
-    try {
-      console.log("🤖 Using Ollama (Local Mode)...");
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+  try {
+    console.log("✨ Using Google Gemini AI...");
+    const genAI = new GoogleGenerativeAI(geminiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const r = await fetch("http://127.0.0.1:11434/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "phi3",
-          prompt,
-          stream: false,
-          options: { num_ctx: 4096 }
-        }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
 
-      if (!r.ok) throw new Error("Ollama API returned " + r.status);
-
-      const data = await r.json();
-      return data.response;
-    } catch (e) {
-      console.error("❌ AI Engine Failed:", e.message);
-    }
+    return text;
+  } catch (e) {
+    console.error("Gemini Failed:", e.message);
+    return `⚠️ AI Error: ${e.message}`;
   }
-
-  // 3. Final Fallback if everything fails
-  return "⚠️ AI Neural Link Offline. Please configure OPENAI_API_KEY in Render settings.";
 }
 
 // Deprecated alias for compatibility
