@@ -288,7 +288,7 @@ app.post("/summarize", async (req, res) => {
       content,
       platform,
       category: analysis.category,
-      score: analysis.sentiment.index || analysis.sentiment,
+      score: (analysis.sentiment && analysis.sentiment.index) || (typeof analysis.sentiment === 'number' ? analysis.sentiment : 0),
       breakdown: analysis.sentiment,
       words: analysis.keywords
     });
