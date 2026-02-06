@@ -170,19 +170,24 @@ async function askAI(prompt) {
           "Authorization": `Bearer ${openAIKey}`
         },
         body: JSON.stringify({
-          model: "gpt-4o-mini", // Cost-effective & fast
+          model: "gpt-3.5-turbo", // Broader compatibility
           messages: [{ role: "user", content: prompt }],
           temperature: 0.7
         })
       });
       const data = await r.json();
+      if (data.error) {
+        throw new Error("OpenAI Error: " + data.error.message);
+      }
       if (data.choices && data.choices.length > 0) {
         return data.choices[0].message.content;
       } else {
         throw new Error("OpenAI response missing choices.");
       }
     } catch (e) {
-      console.error("OpenAI Failed, falling back to local...", e.message);
+      console.error("OpenAI Failed:", e.message);
+      // Return the actual error to the UI so the user knows WHY it failed (e.g. Quota/Key)
+      return `⚠️ AI Error: ${e.message}`;
     }
   }
 
