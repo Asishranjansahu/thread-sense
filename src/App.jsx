@@ -533,6 +533,7 @@ function Dashboard() {
               className="cyber-input border-none bg-transparent flex-1 text-xl py-6"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && summarize()}
               placeholder="Inject Source frequency (Reddit / YouTube / X)..."
             />
             <button
