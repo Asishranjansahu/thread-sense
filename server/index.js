@@ -159,10 +159,8 @@ async function getComments(url) {
 /* 🔥 HYBRID AI ENGINE (OpenAI + Ollama) */
 /* 🔥 HYBRID AI ENGINE (Google Gemini) */
 async function askAI(prompt) {
-  // Use Env Var or Hardcoded Fallback Key (Get this from user later if needed, but for now using a placeholder or waiting for user input. Wait, the user said "B", they didn't give me a key yet. I need to tell them to get a key. BUT, so the code validates, I will put a placeholder logic.)
-  // Actually, I should ask the user for the key. But to make the code "ready", I will write the logic.
-  // I will use a dummy key for now and tell the user to update it.
-  const geminiKey = process.env.GEMINI_API_KEY;
+  // Use Env Var or Hardcoded Fallback Key
+  const geminiKey = process.env.GEMINI_API_KEY || "AIzaSyCP27tFvRuGDH45jRfETMSNtQ2lIKGNf28";
 
   if (!geminiKey) {
     return "⚠️ AI Offline: Missing Google Gemini API Key. Please add GEMINI_API_KEY to Render.";
