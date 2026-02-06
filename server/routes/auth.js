@@ -17,12 +17,12 @@ router.post("/google", async (req, res) => {
         let payload;
 
         if (idToken) {
-            if (!process.env.GOOGLE_CLIENT_ID) {
-                return res.status(500).json({ error: "Google Client ID not configured on server." });
-            }
+            // Hardcoded fallback because Client ID is public and safe
+            const clientId = process.env.GOOGLE_CLIENT_ID || "1069871585161-2msu0pn40pkimlk1ongbasesjfbl2qf2.apps.googleusercontent.com";
+
             const ticket = await client.verifyIdToken({
                 idToken,
-                audience: process.env.GOOGLE_CLIENT_ID,
+                audience: clientId,
             });
             payload = ticket.getPayload();
         } else if (accessToken) {
