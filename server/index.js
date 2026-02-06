@@ -173,7 +173,7 @@ async function askAI(prompt) {
 
     const completion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "llama3-70b-8192",
+      model: "llama-3.1-70b-versatile",
     });
 
     return completion.choices[0]?.message?.content || "No response generated.";
