@@ -68,15 +68,30 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../dist")));
+import fs from "fs";
 
-  app.get("*", (req, res) => {
-    // Exclude API routes from this catch-all
-    if (!req.path.startsWith("/api") && !req.path.startsWith("/summarize") && !req.path.startsWith("/sentiment") && !req.path.startsWith("/keywords") && !req.path.startsWith("/compare") && !req.path.startsWith("/chat")) {
-      res.sendFile(path.resolve(__dirname, "../dist", "index.html"));
-    }
-  });
+if (process.env.NODE_ENV === "production") {
+  const distPath = path.join(__dirname, "../dist");
+
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      // Exclude API routes from this catch-all
+      if (!req.path.startsWith("/api") && !req.path.startsWith("/summarize") && !req.path.startsWith("/sentiment") && !req.path.startsWith("/keywords") && !req.path.startsWith("/compare") && !req.path.startsWith("/chat")) {
+        res.sendFile(path.resolve(distPath, "index.html"));
+      }
+    });
+  } else {
+    app.get("/", (_, res) => res.send(`
+      <div style="font-family: monospace; padding: 50px; text-align: center; background: #0a0a0a; color: #00f3ff;">
+        <h1>🚀 CORE SYSTEM ACTIVE</h1>
+        <p>Backend is running successfully.</p>
+        <hr style="border-color: #333; margin: 20px 0;">
+        <p style="color: #ff0055;">⚠️ FRONTEND NOT DETECTED (../dist missing)</p>
+        <p><strong>Fix:</strong> Update your Render Build Command to: <code>npm install && npm run build</code></p>
+      </div>
+    `));
+  }
 } else {
   app.get("/", (_, res) => res.send("Backend working ✅ (Dev Mode)"));
 }
@@ -169,33 +184,38 @@ async function askAI(prompt) {
     }
   }
 
-  // 2. Fallback to Local Ollama (Local Development)
-  try {
-    console.log("🤖 Using Ollama (Local Mode)...");
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+  // 2. Fallback to Local Ollama (Only if NOT in Production or if explicitly enabled)
+  // On Render, localhost:11434 won't exist, so we skip this to avoid timeouts unless we know it's there.
+  if (process.env.NODE_ENV !== 'production' || process.env.USE_LOCAL_OLLAMA === 'true') {
+    try {
+      console.log("🤖 Using Ollama (Local Mode)...");
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-    const r = await fetch("http://127.0.0.1:11434/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "phi3",
-        prompt,
-        stream: false,
-        options: { num_ctx: 4096 }
-      }),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
+      const r = await fetch("http://127.0.0.1:11434/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "phi3",
+          prompt,
+          stream: false,
+          options: { num_ctx: 4096 }
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-    if (!r.ok) throw new Error("Ollama API returned " + r.status);
+      if (!r.ok) throw new Error("Ollama API returned " + r.status);
 
-    const data = await r.json();
-    return data.response;
-  } catch (e) {
-    console.error("❌ AI Engine Failed:", e.message);
-    return "AI Unavailable. Ensure OPENAI_API_KEY is set or Ollama is running.";
+      const data = await r.json();
+      return data.response;
+    } catch (e) {
+      console.error("❌ AI Engine Failed:", e.message);
+    }
   }
+
+  // 3. Final Fallback if everything fails
+  return "⚠️ AI Neural Link Offline. Please configure OPENAI_API_KEY in Render settings.";
 }
 
 // Deprecated alias for compatibility
