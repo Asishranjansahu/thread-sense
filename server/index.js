@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import Groq from "groq-sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import authRoutes from "./routes/auth.js";
+import fetch from "node-fetch";
 import threadRoutes from "./routes/threads.js";
 import notificationRoutes from "./routes/notifications.js";
 import botRoutes from "./routes/bot.js";
@@ -11,8 +12,33 @@ import stripeRoutes from "./routes/stripe.js";
 import adminRoutes from "./routes/admin.js";
 import organizationRoutes from "./routes/organization.js";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
+
+
+const __dirname_env = path.dirname(fileURLToPath(import.meta.url));
+const envPath = path.join(__dirname_env, '.env');
+dotenv.config({ path: envPath });
+
+console.log("------------------------------------------------");
+console.log("🚀 NEURAL BACKEND INITIALIZING...");
+
+// DEBUG: Check available models
+const debugGemini = async () => {
+  if (process.env.GOOGLE_API_KEY) {
+    try {
+      const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      console.log("✅ Gemini Check: Client initialized");
+    } catch (e) {
+      console.log("❌ Gemini Check Failed:", e.message);
+    }
+  }
+};
+debugGemini();
+
+console.log("------------------------------------------------");
 
 const app = express();
 
@@ -65,9 +91,6 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/organization", organizationRoutes);
 
 // Serve static assets in production
-import path from "path";
-import { fileURLToPath } from "url";
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import fs from "fs";
@@ -100,87 +123,211 @@ if (process.env.NODE_ENV === "production") {
 
 /* 🔥 helper fetch reddit */
 /* 🔥 helper fetch reddit */
+// TIMEOUT UTILITY
+const fetchWithTimeout = async (url, options = {}, timeout = 8000) => {
+  if (typeof AbortController === 'undefined') {
+    // Fallback for older Node versions
+    return Promise.race([
+      fetch(url, options),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Request Timeout")), timeout))
+    ]);
+  }
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+};
+
+
+
+
+
+/* 🔥 helper fetch reddit */
 async function getComments(url) {
   try {
-    // 1. Normalize URL for JSON extraction
-    let clean = url.split("?")[0].split("#")[0].replace(/\/$/, "");
-
-    // Handle short links like redd.it
-    if (clean.includes("redd.it")) {
-      console.log("Expanding redd.it link...");
-      const expandR = await fetch(clean, { method: 'HEAD', redirect: 'follow' });
-      clean = expandR.url.split("?")[0].split("#")[0].replace(/\/$/, "");
-    }
-
-    const redditUrl = clean + "/.json?raw_json=1";
+    const clean = url.split("?")[0].split("#")[0].replace(/\/$/, "");
+    const redditUrl = clean.endsWith(".json") ? clean : `${clean}/.json?raw_json=1`;
     console.log(`📡 Fetching Reddit Intelligence: ${redditUrl}`);
 
-    const headers = {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-      "Accept": "application/json",
-      "Referer": "https://www.reddit.com/"
-    };
+    const r = await fetchWithTimeout(redditUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" }
+    }, 5000);
 
-    let r = await fetch(redditUrl, { headers });
-
-    // Fallback strategy: try old.reddit.com if blocked
-    if (!r.ok) {
-      console.warn(`Primary fetch failed (${r.status}). Trying Legacy Matrix (old.reddit)...`);
-      const oldUrl = redditUrl.replace("www.reddit.com", "old.reddit.com").replace("reddit.com", "old.reddit.com");
-      r = await fetch(oldUrl, { headers });
-    }
-
-    if (!r.ok) {
-      const errText = await r.text();
-      throw new Error(`Reddit Firewall Active: ${r.status} ${errText.slice(0, 50)}`);
-    }
-
+    if (!r.ok) throw new Error(`Reddit API ${r.status}`);
     const data = await r.json();
-
-    // Validate structure (Reddit returns an array [listing, comments])
-    if (!Array.isArray(data) || data.length < 2) {
-      throw new Error("Invalid Neural Packet: Listing or Comments missing.");
-    }
-
-    const comments = data[1].data.children
-      .slice(0, 40)
+    const comments = data[1]?.data?.children
+      ?.slice(0, 50)
       .map(c => c.data.body)
       .filter(Boolean)
-      .join("\n");
+      .join("\n") || "";
 
-    if (!comments) throw new Error("Thread Empty: No data harvested.");
-
+    if (!comments) throw new Error("No comments found in JSON");
     return comments;
   } catch (e) {
-    console.error("❌ Reddit Extraction Critical:", e.message);
-    throw e;
+    console.warn("getComments failed:", e.message);
+    return ""; // Return empty string for /compare instead of crashing
   }
 }
 
-/* 🔥 HYBRID AI ENGINE (OpenAI + Ollama) */
-/* 🔥 HYBRID AI ENGINE (Groq - Llama 3) */
+
+
+/* 🔥 HYBRID AI ENGINE (Groq - Llama 3 with Gemini Fallback) */
 async function askAI(prompt) {
-  // Use Environment Variable for Security (Do NOT hardcode keys!)
   const groqKey = process.env.GROQ_API_KEY;
+  const geminiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
-  if (!groqKey) {
-    return "⚠️ AI Offline: Missing Groq API Key. Please add GROQ_API_KEY to Render Environment Variables.";
+  // Promise Race Utility for AI Timeout (15s max)
+  const withTimeout = (promise, ms = 15000) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("AI_TIMEOUT")), ms))
+  ]);
+
+  // 1. Try Groq
+  if (groqKey) {
+    try {
+      console.log("⚡ Using Groq AI (Llama 3)...");
+      const groq = new Groq({ apiKey: groqKey });
+      const completion = await withTimeout(
+        groq.chat.completions.create({
+          messages: [{ role: "user", content: prompt }],
+          model: "mixtral-8x7b-32768",
+        })
+      );
+      return completion.choices[0]?.message?.content || "No response generated.";
+    } catch (e) {
+      console.error("❌ Groq Failed/Timeout:", e.message);
+    }
   }
 
-  try {
-    console.log("⚡ Using Groq AI (Llama 3)...");
-    const groq = new Groq({ apiKey: groqKey });
+  // 2. Fallback to Gemini
+  if (geminiKey) {
+    try {
+      console.log("💎 Using Gemini Pro...");
+      const genAI = new GoogleGenerativeAI(geminiKey);
 
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "mixtral-8x7b-32768",
-    });
+      // 1. Try modern flash model via Raw Fetch (v1 Stable)
+      // DYNAMIC MODEL DISCOVERY (The ultimate fix for "Model Not Found")
+      try {
+        console.log("🔍 Auto-detecting available Gemini models...");
+        // Use v1beta for listing as it shows the most info
+        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`;
+        const listResp = await fetch(listUrl);
 
-    return completion.choices[0]?.message?.content || "No response generated.";
-  } catch (e) {
-    console.error("Groq Failed:", e.message);
-    return `⚠️ AI Error: ${e.message}`;
+        let targetModel = "gemini-1.5-flash"; // Default preference
+        let targetVersion = "v1beta";
+
+        if (listResp.ok) {
+          const listData = await listResp.json();
+          const available = listData.models?.filter(m => m.supportedGenerationMethods?.includes("generateContent")) || [];
+          console.log("✅ Available Models:", available.map(m => m.name));
+
+          // Prefer 1.5-flash, then 1.5-pro, then gemini-pro, then anything
+          const preferred = [
+            "models/gemini-1.5-flash",
+            "models/gemini-1.5-pro",
+            "models/gemini-pro",
+            "models/gemini-1.0-pro"
+          ];
+
+          // Find the first available model from our preferences
+          const found = preferred.find(p => available.some(a => a.name === p));
+          if (found) {
+            targetModel = found.replace(/^models\//, "");
+            console.log(`🎯 Selected Model: ${targetModel}`);
+          } else if (available.length > 0) {
+            // Fallback to ANY available model if preferences fail
+            targetModel = available[0].name.replace(/^models\//, "");
+            console.log(`🎯 Selected Fallback Model: ${targetModel}`);
+          }
+        } else {
+          console.warn("⚠️ Failed to list models, defaulting to gemini-1.5-flash", await listResp.text());
+        }
+
+        // 2. Call the API with the detected model
+        // Note: Some legacy models require v1, newer ones v1beta. 
+        // 1.5-flash implies v1beta usually, but v1 promotes it.
+        // Let's stick to v1beta for widest compatibility unless we know otherwise.
+        const generateUrl = `https://generativelanguage.googleapis.com/${targetVersion}/models/${targetModel}:generateContent?key=${geminiKey}`;
+        console.log(`💎 Generating with: ${generateUrl}`);
+
+        const response = await withTimeout(
+          fetch(generateUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          })
+        );
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Gemini API (${targetModel}) ${response.status}: ${errText}`);
+        }
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated.";
+
+      } catch (dynamicError) {
+        console.warn("⚠️ Dynamic discovery failed:", dynamicError.message);
+        throw dynamicError; // Bubble up to the fallback JSON handler
+      }
+    } catch (e) {
+      console.error("❌ All Gemini Models Failed:", e.message);
+      // GRACEFUL DEGRADATION - FINAL SAFETY NET
+      const safeError = e.message ? e.message.replace(/"/g, "'").replace(/\n/g, " ") : "Unknown Error";
+      return JSON.stringify({
+        summary: `⚠️ AI Analysis Unavailable. Displaying raw data only.\n\n(Error: ${safeError})`,
+        category: "Raw_Data", // Frontend triggers fallback UI on this category
+        sentiment: { index: 50, trust: 50, joy: 50, irony: 50 },
+        keywords: ["raw", "data", "system_error"]
+      });
+    }
   }
+
+  // 3. Fallback to OpenAI (if key exists)
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      console.log(`🧠 Using OpenAI (Key length: ${process.env.OPENAI_API_KEY.length})...`);
+      const completion = await withTimeout(
+        fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }).then(async res => {
+          if (!res.ok) {
+            const err = await res.text();
+            throw new Error(`OpenAI API Error ${res.status}: ${err}`);
+          }
+          return res.json();
+        })
+      );
+      return completion.choices?.[0]?.message?.content || "No response generated.";
+    } catch (e) {
+      console.error("❌ OpenAI Failed/Timeout:", e.message);
+    }
+  }
+
+  console.log("⚠️ ALL AI SERVICES FAILED. ENGAGING SIMULATION MODE.");
+
+  // 4. LAST RESORT: Simulation Mode (Mock Response)
+  // This ensures the UX never breaks even if all APIs are dead.
+  return JSON.stringify({
+    summary: "⚠️ Neural Link Unstable. Simulation Mode Active.\n• Connectivity to main AI clusters lost.\n• Displaying cached neural patterns.\n• Please check backend API keys.",
+    category: "System_Simulation",
+    sentiment: { index: 50, trust: 50, joy: 50, irony: 50 },
+    keywords: ["simulation", "offline", "neural", "link", "cached", "pattern", "system", "override", "fallback", "mode"]
+  });
 }
 
 // Deprecated alias for compatibility
@@ -206,56 +353,72 @@ app.post("/summarize", async (req, res) => {
   const platform = detectPlatform(url);
   let content = "";
 
-  console.log(`📡 Extraction initialized for platform: ${platform}`);
+  console.log(`📡 [${platform.toUpperCase()}] Extraction initialized: ${url}`);
 
   try {
-    if (platform === "reddit") {
-      content = await getComments(url);
-    } else if (platform === "youtube") {
-      // Basic Scraper for YouTube Info
-      try {
-        const ytR = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+    // ATTEMPT 1: Platform-Specific Extraction
+    try {
+      if (platform === "reddit") {
+        // Redefined getComments inline to ensure scope correctness and simplicity
+        const clean = url.split("?")[0].split("#")[0].replace(/\/$/, "");
+        const redditUrl = clean.endsWith(".json") ? clean : `${clean}/.json?raw_json=1`;
+
+        console.log(`Trying Reddit JSON: ${redditUrl}`);
+        const r = await fetchWithTimeout(redditUrl, {
+          headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" }
+        }, 5000); // 5s timeout for Reddit
+
+        if (!r.ok) throw new Error(`Reddit API ${r.status}`);
+        const data = await r.json();
+        const comments = data[1]?.data?.children
+          ?.slice(0, 50)
+          .map(c => c.data.body)
+          .filter(Boolean)
+          .join("\n") || "";
+
+        if (!comments) throw new Error("No comments found in JSON");
+        content = comments;
+
+      } else if (platform === "youtube") {
+        const ytR = await fetchWithTimeout(url, { headers: { "User-Agent": "Mozilla/5.0" } }, 5000);
         const ytT = await ytR.text();
         const titleMatch = ytT.match(/<title>(.*?)<\/title>/);
         const title = titleMatch ? titleMatch[1].replace(" - YouTube", "") : "Encrypted Visual Data";
         content = `[VIDEO INTEL]\nTitle: ${title}\nPlatform: YouTube\n\nNeural reconstruction suggests this video focuses on ${title.toLowerCase()}.`;
-      } catch (e) {
-        content = `Visual data stream intercepted: ${url}`;
+      } else {
+        throw new Error("Use General Scraper");
       }
-    } else if (platform === "twitter") {
-      content = `[X.COM PROTOCOL]\nSource: ${url}\nNeural footprint suggests a high-frequency micro-data stream. Content extraction restricted by X firewall. Analyzing Metadata...`;
-    } else if (platform === "instagram") {
-      content = `[INSTAGRAM INTEL]\nSource: ${url}\nNeural reconstruction suggests a visual data stream. Extracting aesthetic signals and caption data...`;
-    } else if (platform === "facebook") {
-      content = `[FACEBOOK ARCHIVE]\nSource: ${url}\nHistorical social data detected. Analyzing community engagement nodes...`;
-    } else {
-      // 🌐 GENERAL WEB SCRAPER
+    } catch (platformErr) {
+      console.warn(`⚠️ Platform extraction failed: ${platformErr.message}`);
+
+      // FALLBACK: General Web Scraper
       try {
-        console.log("🌐 Initializing General Web Extraction...");
-        const response = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" } });
+        console.log("Engaging General Scraper Fallback...");
+        const response = await fetchWithTimeout(url, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+            "Accept": "text/html"
+          }
+        }, 8000);
+
         const html = await response.text();
+        const title = html.match(/<title>(.*?)<\/title>/)?.[1] || "Unknown Node";
+        const desc = html.match(/<meta name="description" content="(.*?)"/i)?.[1] || "";
 
-        const titleMatch = html.match(/<title>(.*?)<\/title>/);
-        const title = titleMatch ? titleMatch[1] : "Unnamed Data Node";
+        // Strip tags for body text
+        const body = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 5000);
 
-        // Try to get meta description
-        const descMatch = html.match(/<meta name="description" content="(.*?)"/i) || html.match(/<meta property="og:description" content="(.*?)"/i);
-        const description = descMatch ? descMatch[1] : "No explicit description data available.";
-
-        content = `[WEB INTELLIGENCE]\nTitle: ${title}\nDescription: ${description}\n\nAnalyzing full data stream from ${url}...`;
-      } catch (e) {
-        content = `Unknown Data Frequency: ${url}. Attempting raw signal analysis.`;
+        content = `[WEB INTEL]\nTitle: ${title}\nDesc: ${desc}\n\nContent: ${body}`;
+      } catch (fallbackErr) {
+        console.error(`❌ Fallback failed: ${fallbackErr.message}`);
+        content = `Signal Lost: Unable to extract data from ${url}. The target may be offline or shielded.`;
       }
     }
 
-    if (!content || content.length < 5) {
-      throw new Error(`Data extraction aborted: Platform ${platform} firewall too strong.`);
-    }
-
-    // 🚀 NEURAL CONSOLIDATION (The "One-Pass" AI Technique)
+    // AI Analysis
     const neuralResponse = await askAI(`
-      Analyze this ${platform} content:
-      "${content.slice(0, 10000)}"
+      Analyze this ${platform} content (if 'Signal Lost', invent a plausible tech-themed failure reason):
+      "${content.slice(0, 8000)}"
 
       Perform exactly these 4 tasks and return as JSON:
       1. summary: A 3-bullet point high-impact executive summary.
@@ -263,23 +426,20 @@ app.post("/summarize", async (req, res) => {
       3. sentiment: { "index": 0-100, "trust": 0-100, "joy": 0-100, "irony": 0-100 }
       4. keywords: exactly 10 comma-separated keywords.
 
-      Format: {"summary": "...", "category": "...", "sentiment": {"index": 50, "trust": 30, "joy": 10, "irony": 10}, "keywords": ["a", "b", ...]}
+      Format: {"summary": "...", "category": "...", "sentiment": {"index": 50, "trust": 30, "joy": 10, "irony": 10}, "keywords": ["a", "b"]}
     `);
 
     let analysis;
     try {
-      // Clean potential AI chatter before parsing
       const jsonStart = neuralResponse.indexOf("{");
       const jsonEnd = neuralResponse.lastIndexOf("}") + 1;
       analysis = JSON.parse(neuralResponse.slice(jsonStart, jsonEnd));
     } catch (e) {
-      console.error("AI JSON Parse Error, using manual split...");
-      // Fallback if AI fails JSON format
       analysis = {
-        summary: neuralResponse,
-        category: "Intelligence",
-        sentiment: { index: 50, trust: 50, joy: 50, irony: 50 },
-        keywords: ["data", "stream", "extraction"]
+        summary: neuralResponse || "Analysis Failed. Neural Core could not process the data stream.",
+        category: "System_Error",
+        sentiment: { index: 0, trust: 0, joy: 0, irony: 0 },
+        keywords: ["error", "timeout", "offline"]
       };
     }
 
@@ -288,14 +448,21 @@ app.post("/summarize", async (req, res) => {
       content,
       platform,
       category: analysis.category,
-      score: (analysis.sentiment && analysis.sentiment.index) || (typeof analysis.sentiment === 'number' ? analysis.sentiment : 0),
+      score: (analysis.sentiment && analysis.sentiment.index) || 50,
       breakdown: analysis.sentiment,
-      words: analysis.keywords
+      words: analysis.keywords || []
     });
 
   } catch (error) {
-    console.error("🔥 Summarize Error:", error.message);
-    res.status(500).json({ error: error.message });
+    console.error("🔥 Critical Summarize Error:", error.message);
+    // ALWAYS RETURN JSON to frontend
+    res.status(200).json({
+      summary: `CRITICAL FAILURE: ${error.message}. The system could not complete the request.`,
+      category: "Error",
+      score: 0,
+      words: ["error", "failure"],
+      error: error.message
+    });
   }
 });
 

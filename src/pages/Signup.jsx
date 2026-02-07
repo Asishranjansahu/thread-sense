@@ -241,32 +241,40 @@ export default function Signup() {
                         </div>
 
                         {/* Google Auth Integrated */}
-                        <div className="flex flex-col items-center gap-4">
-                            <GoogleLogin
-                                onSuccess={async (credentialResponse) => {
-                                    setLoading(true);
-                                    try {
-                                        const res = await fetch(`${API}/api/auth/google`, {
-                                            method: "POST",
-                                            headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify({ idToken: credentialResponse.credential })
-                                        });
-                                        const data = await res.json();
-                                        if (!res.ok) throw new Error(data.error);
-                                        login(data.user, data.token);
-                                        navigate("/");
-                                    } catch (err) {
-                                        setError(err.message);
-                                    } finally {
-                                        setLoading(false);
-                                    }
-                                }}
-                                onError={() => setError("Google Auth Failed")}
-                                theme="filled_black"
-                                shape="pill"
-                                text="signup_with"
-                                useOneTap
-                            />
+                        <div className="flex flex-col items-center gap-4 min-h-[40px] justify-center">
+                            {loading ? (
+                                <div className="flex items-center gap-3 text-purple-400 animate-pulse bg-white/5 px-6 py-3 rounded-full border border-purple-500/30">
+                                    <Loader className="w-4 h-4 animate-spin" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">
+                                        Syncing Neural Identity...
+                                    </span>
+                                </div>
+                            ) : (
+                                <GoogleLogin
+                                    onSuccess={async (credentialResponse) => {
+                                        setLoading(true);
+                                        try {
+                                            const res = await fetch(`${API}/api/auth/google`, {
+                                                method: "POST",
+                                                headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify({ idToken: credentialResponse.credential })
+                                            });
+                                            const data = await res.json();
+                                            if (!res.ok) throw new Error(data.error);
+                                            login(data.user, data.token);
+                                            navigate("/");
+                                        } catch (err) {
+                                            setError(err.message);
+                                            setLoading(false);
+                                        }
+                                    }}
+                                    onError={() => setError("Google Auth Failed")}
+                                    theme="filled_black"
+                                    shape="pill"
+                                    text="signup_with"
+                                    useOneTap
+                                />
+                            )}
                         </div>
 
                         {error && (

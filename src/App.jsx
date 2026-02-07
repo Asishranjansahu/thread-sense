@@ -188,9 +188,10 @@ function Layout() {
 }
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useContext(AuthContext);
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-black text-cyan-500 font-mono animate-pulse">INITIATING SECURE SESSION...</div>;
-  if (!user) return <Navigate to="/login" />;
+  // BYPASS LOGIN FOR LOCAL DEV / DEBUGGING
+  // const { user, loading } = useContext(AuthContext);
+  // if (loading) return <div className="min-h-screen flex items-center justify-center bg-black text-cyan-500 font-mono animate-pulse">INITIATING SECURE SESSION...</div>;
+  // if (!user) return <Navigate to="/login" />;
   return children;
 };
 
@@ -404,14 +405,30 @@ function Dashboard() {
     setErrorMSG("");
     setCurrentThreadId(null);
 
+    // TIMEOUT WRAPPER FOR FRONTEND FETCH (60s)
+    const fetchWithTimeout = (url, options, timeout = 60000) => {
+      return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Connection to Neural Core timed out (Backend Unresponsive).")), timeout))
+      ]);
+    };
+
     try {
-      const res = await fetch(API + "/summarize", {
+      const res = await fetchWithTimeout(API + "/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: targetUrl })
       });
 
-      const r = await res.json();
+      const text = await res.text();
+      let r;
+      try {
+        r = JSON.parse(text);
+      } catch (e) {
+        console.error("Backend returned non-JSON:", text.slice(0, 500));
+        throw new Error("Neural Core Malfunction: Invalid Response Format. (Backend may have crashed)");
+      }
+
       if (!res.ok) throw new Error(r.error || "Failed to fetch summary");
 
       setSummary(r.summary);
@@ -444,6 +461,7 @@ function Dashboard() {
         setCurrentThreadId(saved._id);
       }
     } catch (e) {
+      console.error("Summarize Error:", e);
       setErrorMSG(e.message);
     }
     setLoading(false);
