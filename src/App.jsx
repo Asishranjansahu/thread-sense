@@ -188,10 +188,9 @@ function Layout() {
 }
 
 const ProtectedRoute = ({ children }) => {
-  // BYPASS LOGIN FOR LOCAL DEV / DEBUGGING
-  // const { user, loading } = useContext(AuthContext);
-  // if (loading) return <div className="min-h-screen flex items-center justify-center bg-black text-cyan-500 font-mono animate-pulse">INITIATING SECURE SESSION...</div>;
-  // if (!user) return <Navigate to="/login" />;
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-black text-cyan-500 font-mono animate-pulse">INITIATING SECURE SESSION...</div>;
+  if (!user) return <Navigate to="/login" />;
   return children;
 };
 
