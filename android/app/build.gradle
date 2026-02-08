@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.threadsense.app"
+    namespace = "com.threadsense.core"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.threadsense.app"
+        applicationId "com.threadsense.core"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.0.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +16,29 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Optional release signing via environment variables (no secrets in repo)
+    def keystoreFile = System.getenv("TS_KEYSTORE_PATH")
+    def keystorePass = System.getenv("TS_KEYSTORE_PASSWORD")
+    def keyAlias     = System.getenv("TS_KEY_ALIAS")
+    def keyPass      = System.getenv("TS_KEY_PASSWORD")
+
+    signingConfigs {
+        release {
+            if (keystoreFile && keystorePass && keyAlias && keyPass) {
+                storeFile file(keystoreFile)
+                storePassword keystorePass
+                keyAlias keyAlias
+                keyPassword keyPass
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (keystoreFile && keystorePass && keyAlias && keyPass) {
+                signingConfig signingConfigs.release
+            }
         }
     }
     compileOptions {

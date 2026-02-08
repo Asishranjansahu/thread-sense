@@ -157,9 +157,9 @@ router.post("/resend-otp", async (req, res) => {
         user.otpExpires = new Date(Date.now() + 10 * 60000);
         await user.save();
 
-        if (email) {
+        if (user.email) {
             await sendEmail(
-                email,
+                user.email,
                 "ThreadSense Identity Verification",
                 `Your Neural Sync Code is: ${otp}`,
                 `<div style="font-family: monospace; background: #000; color: #00f3ff; padding: 20px; border-radius: 10px;">
@@ -169,8 +169,8 @@ router.post("/resend-otp", async (req, res) => {
                     <p>This frequency expires in 10 minutes.</p>
                  </div>`
             );
-        } else {
-            console.log(`⚠️ SMS not configured. OTP for ${phone}: ${otp}`);
+        } else if (user.phone) {
+            console.log(`⚠️ SMS not configured. OTP for ${user.phone}: ${otp}`);
         }
         console.log(`📡 [RESYNC TRANSMISSION] New OTP for ${user.email || user.phone}: ${otp}`);
 

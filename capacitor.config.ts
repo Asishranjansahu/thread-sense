@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.threadsense.app',
-  appName: 'ThreadSense',
+  appId: 'com.threadsense.core',
+  appName: 'Thread Sense',
   webDir: 'dist'
 };
 

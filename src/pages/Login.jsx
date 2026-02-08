@@ -88,25 +88,25 @@ export default function Login() {
             </div>
 
             {/* Right Side: Authentication Terminal */}
-            <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative z-10">
+            <div className="flex-1 flex items-center justify-center p-[env(safe-area-inset-top)] sm:p-12 relative z-10 w-full">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="w-full max-w-sm"
+                    className="w-full max-w-sm px-6"
                 >
                     {/* Brand Identity */}
-                    <div className="text-center mb-10">
+                    <div className="text-center mb-6 mt-4 sm:mt-0">
                         <h1 className="text-3xl font-black tracking-tighter text-white uppercase mb-2">
                             THREAD<span className="text-cyan-500">SENSE</span>
                         </h1>
                         <p className="text-zinc-500 text-xs uppercase tracking-[0.3em] font-bold opacity-60">Authorize Operative</p>
                     </div>
 
-                    <div className="bg-white/[0.02] border border-white/5 p-6 md:p-8 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-30"></div>
+                    <div className="bg-transparent sm:bg-white/[0.02] border-0 sm:border sm:border-white/5 p-0 sm:p-6 sm:rounded-2xl sm:backdrop-blur-2xl sm:shadow-xl relative overflow-hidden">
+                        <div className="hidden sm:block absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-30"></div>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Method Switcher */}
                             <div className="flex bg-white/[0.03] p-1 rounded-2xl mb-6 border border-white/5">
                                 <button
@@ -125,47 +125,46 @@ export default function Login() {
                                 </button>
                             </div>
 
-                            <div className="space-y-1">
+                            <div className="space-y-4">
                                 <div className="relative group">
                                     <input
                                         type={loginMethod === 'email' ? 'email' : 'tel'}
-                                        className="w-full bg-white/[0.03] border border-white/5 p-4 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 transition-all text-sm font-medium"
+                                        className="w-full bg-white/[0.03] border border-white/5 p-4 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 transition-all text-base font-medium"
                                         placeholder={loginMethod === 'email' ? "Agent ID / Email" : "Neural Terminal Phone"}
                                         value={identifier}
                                         onChange={(e) => setIdentifier(e.target.value)}
                                         required
                                     />
                                 </div>
-                            </div>
-
-                            <div className="space-y-1">
-                                <input
-                                    type="password"
-                                    className="w-full bg-white/[0.03] border border-white/5 p-4 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 transition-all text-sm font-medium"
-                                    placeholder="Security Key"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
+                                <div>
+                                    <input
+                                        type="password"
+                                        className="w-full bg-white/[0.03] border border-white/5 p-4 rounded-2xl text-white placeholder:text-zinc-600 focus:outline-none focus:border-cyan-500/50 transition-all text-base font-medium"
+                                        placeholder="Security Key"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-4 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-widest hover:bg-cyan-500 transition-all duration-300 flex items-center justify-center gap-2 group mt-2"
+                                className="w-full py-3 rounded-2xl bg-cyan-500 text-black font-black text-xs uppercase tracking-widest hover:bg-cyan-400 transition-all duration-300 flex items-center justify-center gap-2 group mt-2"
                             >
                                 {loading ? <Loader className="animate-spin w-4 h-4" /> : "Initiate Connection"}
                                 {!loading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
                             </button>
 
-                            <div className="text-center pt-2">
+                            <div className="hidden sm:block text-center pt-2">
                                 <Link to="/forgot-password">
                                     <button type="button" className="text-[10px] uppercase font-black tracking-widest text-zinc-600 hover:text-cyan-400 transition-colors">Forgot Security Key?</button>
                                 </Link>
                             </div>
                         </form>
 
-                        <div className="relative my-6 text-center">
+                        <div className="hidden sm:block relative my-6 text-center">
                             <div className="absolute inset-0 flex items-center">
                                 <div className="w-full border-t border-white/5"></div>
                             </div>
@@ -214,7 +213,7 @@ export default function Login() {
                         )}
                     </div>
 
-                    <div className="mt-8 text-center bg-white/[0.02] border border-white/5 py-8 rounded-[2rem] backdrop-blur-lg">
+                    <div className="mt-8 text-center bg-transparent sm:bg-white/[0.02] border-0 sm:border sm:border-white/5 py-0 sm:py-8 sm:rounded-[2rem] sm:backdrop-blur-lg">
                         <p className="text-zinc-500 text-xs font-medium tracking-wide">
                             Don't have an account?{' '}
                             <Link to="/signup" className="text-cyan-400 hover:text-white font-black transition-all ml-1 uppercase tracking-widest">
@@ -223,24 +222,26 @@ export default function Login() {
                         </p>
                     </div>
 
-                    {/* Android App Download */}
-                    <Link
-                        to="/install-guide"
-                        className="mt-4 block bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 py-4 px-6 rounded-2xl backdrop-blur-lg hover:border-emerald-500/50 transition-all group"
-                    >
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                                    <Download size={16} />
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-emerald-400 text-[10px] uppercase font-black tracking-widest leading-tight">Android System</p>
-                                    <p className="text-zinc-500 text-[9px] font-medium tracking-wide">Download Native APK</p>
-                                </div>
-                            </div>
-                            <ArrowRight className="w-4 h-4 text-emerald-500/50 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                    </Link>
+                    {/* Android App Download - Hidden on Mobile App Context */}
+                    <div className="hidden sm:block">
+                      <Link
+                          to="/install-guide"
+                          className="mt-4 block bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 py-4 px-6 rounded-2xl backdrop-blur-lg hover:border-emerald-500/50 transition-all group"
+                      >
+                          <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                      <Download size={16} />
+                                  </div>
+                                  <div className="text-left">
+                                      <p className="text-emerald-400 text-[10px] uppercase font-black tracking-widest leading-tight">Android System</p>
+                                      <p className="text-zinc-500 text-[9px] font-medium tracking-wide">Download Native APK</p>
+                                  </div>
+                              </div>
+                              <ArrowRight className="w-4 h-4 text-emerald-500/50 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                      </Link>
+                    </div>
 
                     <footer className="mt-8 text-center opacity-20 pointer-events-none">
                         <p className="text-[9px] uppercase tracking-[0.6em] text-white">© 2026 Thread Sense Intelligence</p>

@@ -100,6 +100,9 @@ if (process.env.NODE_ENV === "production") {
 
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
+    const uploadsDir = path.join(__dirname, "uploads");
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    app.use("/uploads", express.static(uploadsDir));
     app.get("*", (req, res) => {
       // Exclude API routes from this catch-all
       if (!req.path.startsWith("/api") && !req.path.startsWith("/summarize") && !req.path.startsWith("/sentiment") && !req.path.startsWith("/keywords") && !req.path.startsWith("/compare") && !req.path.startsWith("/chat")) {
@@ -119,7 +122,15 @@ if (process.env.NODE_ENV === "production") {
   }
 } else {
   app.get("/", (_, res) => res.send("Backend working ✅ (Dev Mode)"));
+  const uploadsDir = path.join(__dirname, "uploads");
+  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+  app.use("/uploads", express.static(uploadsDir));
 }
+
+// Serve uploads in all modes
+const uploadsRoot = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsRoot)) fs.mkdirSync(uploadsRoot, { recursive: true });
+app.use("/uploads", express.static(uploadsRoot));
 
 /* 🔥 helper fetch reddit */
 /* 🔥 helper fetch reddit */
@@ -176,7 +187,55 @@ async function getComments(url) {
   }
 }
 
+/* IMAGE UPLOAD */
+app.post("/api/upload-image", async (req, res) => {
+  try {
+    const { imageBase64, filename } = req.body;
+    if (!imageBase64 || typeof imageBase64 !== "string" || !imageBase64.startsWith("data:image")) {
+      return res.status(400).json({ error: "Invalid image" });
+    }
+    const uploadsDir = path.join(__dirname, "uploads");
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    const extMatch = imageBase64.match(/^data:image\/(png|jpeg|jpg);base64,/i);
+    const ext = extMatch ? (extMatch[1] === "jpg" ? "jpeg" : extMatch[1]) : "png";
+    const cleanName = (filename || "img").replace(/[^a-zA-Z0-9_\-]/g, "").slice(0, 32);
+    const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const outName = `${cleanName || "img"}-${unique}.${ext}`;
+    const outPath = path.join(uploadsDir, outName);
+    const b64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(b64, "base64");
+    fs.writeFileSync(outPath, buf);
+    res.json({ url: `/uploads/${outName}` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
+app.post("/api/upload-audio", async (req, res) => {
+  try {
+    const { audioBase64, filename } = req.body;
+    if (!audioBase64 || typeof audioBase64 !== "string" || !audioBase64.startsWith("data:audio")) {
+      return res.status(400).json({ error: "Invalid audio" });
+    }
+    const uploadsDir = path.join(__dirname, "uploads");
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    const extMatch = audioBase64.match(/^data:audio\/(webm|mpeg|mp3|wav|ogg);base64,/i);
+    const ext = extMatch ? (extMatch[1] === "mpeg" ? "mp3" : extMatch[1]) : "webm";
+    const cleanName = (filename || "audio").replace(/[^a-zA-Z0-9_\-]/g, "").slice(0, 32);
+    const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const outName = `${cleanName || "audio"}-${unique}.${ext}`;
+    const outPath = path.join(uploadsDir, outName);
+    const b64 = audioBase64.replace(/^data:audio\/\w+;base64,/, "");
+    const buf = Buffer.from(b64, "base64");
+    fs.writeFileSync(outPath, buf);
+    res.json({ url: `/uploads/${outName}` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
+let geminiCooldownUntil = 0;
 
 /* 🔥 HYBRID AI ENGINE (Groq - Llama 3 with Gemini Fallback) */
 async function askAI(prompt) {
@@ -209,6 +268,9 @@ async function askAI(prompt) {
   // 2. Fallback to Gemini
   if (geminiKey) {
     try {
+      if (Date.now() < geminiCooldownUntil) {
+        throw new Error("Gemini cooldown active");
+      }
       console.log("💎 Using Gemini Pro...");
       const genAI = new GoogleGenerativeAI(geminiKey);
 
@@ -267,6 +329,34 @@ async function askAI(prompt) {
 
         if (!response.ok) {
           const errText = await response.text();
+          const is429 = response.status === 429 || /RESOURCE_EXHAUSTED|quota/i.test(errText);
+          if (is429) {
+            const retryMatch = errText.match(/retry in (\d+(\.\d+)?)s/i);
+            const retrySec = retryMatch ? parseFloat(retryMatch[1]) : 60;
+            geminiCooldownUntil = Date.now() + retrySec * 1000;
+            if (process.env.OPENAI_API_KEY) {
+              const openaiRes = await withTimeout(
+                fetch("https://api.openai.com/v1/chat/completions", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+                  },
+                  body: JSON.stringify({
+                    model: "gpt-3.5-turbo",
+                    messages: [{ role: "user", content: prompt }]
+                  })
+                }).then(async r => {
+                  if (!r.ok) {
+                    const t = await r.text();
+                    throw new Error(`OpenAI API Error ${r.status}: ${t}`);
+                  }
+                  return r.json();
+                })
+              );
+              return openaiRes.choices?.[0]?.message?.content || "No response generated.";
+            }
+          }
           throw new Error(`Gemini API (${targetModel}) ${response.status}: ${errText}`);
         }
         const data = await response.json();
@@ -443,14 +533,29 @@ app.post("/summarize", async (req, res) => {
       };
     }
 
+    // Data Normalization (Prevent Frontend Crashes)
+    let summaryText = analysis.summary;
+    if (Array.isArray(summaryText)) {
+      summaryText = summaryText.join("\n\n");
+    } else if (typeof summaryText !== 'string') {
+      summaryText = String(summaryText || "Analysis Complete.");
+    }
+
+    let keywordsArray = analysis.keywords;
+    if (typeof keywordsArray === 'string') {
+      keywordsArray = keywordsArray.split(',').map(k => k.trim());
+    } else if (!Array.isArray(keywordsArray)) {
+      keywordsArray = ["Neural", "Data", "Analysis"];
+    }
+
     res.json({
-      summary: analysis.summary,
+      summary: summaryText,
       content,
       platform,
-      category: analysis.category,
+      category: analysis.category || "General",
       score: (analysis.sentiment && analysis.sentiment.index) || 50,
-      breakdown: analysis.sentiment,
-      words: analysis.keywords || []
+      breakdown: analysis.sentiment || { index: 50, trust: 50, joy: 50, irony: 50 },
+      words: keywordsArray
     });
 
   } catch (error) {

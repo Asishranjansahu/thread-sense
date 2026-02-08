@@ -167,17 +167,19 @@ export default function SplashLoader({ onComplete }) {
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-2">
-                            <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden border border-white/10">
+                        <div className="flex flex-col items-center w-full">
+                            <p className="text-cyan-400 text-xs uppercase tracking-[0.2em] font-bold mb-3 text-center px-4 max-w-[90vw] whitespace-normal leading-relaxed">
+                                {status}
+                            </p>
+                            <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden border border-white/10 mb-1">
                                 <motion.div
                                     animate={{ width: `${progress}%` }}
                                     className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500 shadow-[0_0_15px_#00f3ff]"
                                 />
                             </div>
-                            <div className="flex justify-between items-center text-[10px] font-mono font-bold tracking-widest text-cyan-400">
-                                <span>{status}</span>
-                                <span>{Math.round(progress)}%</span>
-                            </div>
+                            <p className="text-[10px] font-mono font-bold tracking-widest text-cyan-500/70 w-full text-right">
+                                {Math.round(progress)}%
+                            </p>
                         </div>
                     )}
                 </div>

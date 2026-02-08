@@ -4,10 +4,13 @@ import { Link } from "react-router-dom";
 import { User, Mail, Shield, ArrowLeft, Building, Zap, Activity, Fingerprint } from "lucide-react";
 import { motion } from "framer-motion";
 import { API } from "../config";
+import ImagePicker from "../components/ImagePicker";
 
 export default function Profile() {
     const { user } = useContext(AuthContext);
     const [org, setOrg] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState("");
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         if (user?.organization) {
@@ -38,7 +41,9 @@ export default function Profile() {
                     <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-cyan-500 to-purple-600 p-[1px]">
                         <div className="w-full h-full rounded-3xl bg-zinc-950 flex items-center justify-center overflow-hidden relative group">
                             <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            {user?.avatar ? (
+                            {avatarPreview ? (
+                                <img src={avatarPreview} className="w-full h-full object-cover" />
+                            ) : user?.avatar ? (
                                 <img src={user.avatar} className="w-full h-full object-cover" />
                             ) : (
                                 <span className="text-4xl font-black text-white">{user?.username?.charAt(0).toUpperCase()}</span>
@@ -55,6 +60,31 @@ export default function Profile() {
                                 Active
                             </span>
                             <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-widest whitespace-nowrap">Neural Link: SECURE</span>
+                        </div>
+                        <div className="mt-4">
+                            <ImagePicker
+                                value={avatarPreview || user?.avatar || ""}
+                                onChange={setAvatarPreview}
+                                saving={uploading}
+                                onSave={async () => {
+                                    if (!avatarPreview) return;
+                                    setUploading(true);
+                                    try {
+                                        const token = localStorage.getItem("token");
+                                        const res = await fetch(`${API}/api/upload-image`, {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json", ...(token ? { "Authorization": `Bearer ${token}` } : {}) },
+                                            body: JSON.stringify({ imageBase64: avatarPreview, filename: user?.username || "avatar" })
+                                        });
+                                        const data = await res.json();
+                                        if (res.ok && data.url) {
+                                            setAvatarPreview(`${API}${data.url}`);
+                                        }
+                                    } finally {
+                                        setUploading(false);
+                                    }
+                                }}
+                            />
                         </div>
                     </div>
                 </motion.div>

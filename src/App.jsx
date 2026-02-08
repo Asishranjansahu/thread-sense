@@ -20,9 +20,17 @@ import Welcome from "./pages/Welcome";
 import TargetSearch from "./pages/TargetSearch";
 import { PaymentSuccess, PaymentCancel } from "./pages/PaymentStatus";
 import { Youtube, Twitter, MessageSquare, Shield, Zap, Target, Search, Clock, ExternalLink, Users, LayoutDashboard, CreditCard, LogOut, Bell, Menu, ChevronLeft, ChevronRight, Instagram, Facebook, Globe, Loader2 } from "lucide-react";
-import { API } from "./config";
+import { API, FOOTER_NAME } from "./config";
 import SplashLoader from "./components/SplashLoader";
 import ThreadSenseLogo3D from "./components/ThreadSenseLogo3D";
+import ImagePicker from "./components/ImagePicker";
+import CameraSection from "./components/CameraSection";
+import MicSection from "./components/MicSection";
+import ToolsBox from "./components/ToolsBox";
+import ConversationsList from "./components/ConversationsList";
+import ChatMessages from "./components/ChatMessages";
+import Composer from "./components/Composer";
+import ShareLinkButton from "./components/ShareLinkButton";
 
 // --- CONSTANTS ---
 const MENU_ITEMS = [
@@ -37,6 +45,8 @@ const MENU_ITEMS = [
 function Sidebar({ isCollapsed, toggleSidebar }) {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
+  const [sbImagePreview, setSbImagePreview] = useState("");
+  const [sbSaving, setSbSaving] = useState(false);
 
   return (
     <motion.aside
@@ -84,6 +94,45 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
         ))}
       </nav>
 
+      {!isCollapsed && (
+        <div className="w-full px-4 mb-4 space-y-6">
+          <div className="space-y-3">
+            <div className="text-[9px] uppercase tracking-widest font-black text-zinc-600">Image Upload</div>
+            <ImagePicker
+              value={sbImagePreview}
+              onChange={setSbImagePreview}
+              saving={sbSaving}
+              onSave={async () => {
+                if (!sbImagePreview) return;
+                setSbSaving(true);
+                try {
+                  const token = localStorage.getItem("token");
+                  const res = await fetch(`${API}/api/upload-image`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", ...(token ? { "Authorization": `Bearer ${token}` } : {}) },
+                    body: JSON.stringify({ imageBase64: sbImagePreview, filename: "sidebar" })
+                  });
+                  const data = await res.json();
+                  if (res.ok && data.url) {
+                    setSbImagePreview(`${API}${data.url}`);
+                  }
+                } finally {
+                  setSbSaving(false);
+                }
+              }}
+            />
+          </div>
+          <div className="space-y-3">
+            <div className="text-[9px] uppercase tracking-widest font-black text-zinc-600">Camera</div>
+            <CameraSection compact onSaved={(url) => setSbImagePreview(url)} />
+          </div>
+          <div className="space-y-3">
+            <div className="text-[9px] uppercase tracking-widest font-black text-zinc-600">Mic</div>
+            <MicSection />
+          </div>
+        </div>
+      )}
+
       <div className="w-full px-4 mt-auto">
         <button
           onClick={logout}
@@ -111,12 +160,15 @@ function MobileTopBar() {
         </div>
         <span className="text-[10px] font-black tracking-[0.2em] text-cyan-400 uppercase">THREAD SENSE</span>
       </div>
-      <button
-        onClick={logout}
-        className="p-2 rounded-lg text-red-500/50 hover:text-red-500 hover:bg-red-500/10 transition-colors"
-      >
-        <LogOut className="w-5 h-5" />
-      </button>
+      <div className="flex items-center gap-2">
+        <ShareLinkButton size="sm" />
+        <button
+          onClick={logout}
+          className="p-2 rounded-lg text-red-500/50 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -167,6 +219,7 @@ function Layout() {
         }}
       >
         <div className="hidden md:block absolute left-0 top-0 bottom-0 transition-all duration-300 w-[var(--sidebar-width)] pointer-events-none" />
+        
 
         <div className="scanline opacity-10 pointer-events-none fixed inset-0 z-0"></div>
         <AnimatePresence>
@@ -177,10 +230,16 @@ function Layout() {
             transition={{ duration: 0.1 }}
             className="w-full relative z-10"
           >
+            
             <Outlet />
+          <footer className="mt-10 pb-6 text-center">
+            <p className="text-[9px] uppercase tracking-[0.4em] text-zinc-600">Designed & Built by {FOOTER_NAME}</p>
+          </footer>
           </motion.main>
         </AnimatePresence>
       </div>
+
+      
 
       <MobileNav />
     </div>
@@ -195,17 +254,22 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // --- TYPING EFFECT COMPONENT ---
-function TypingText({ text, speed = 15 }) {
+function TypingText({ text = "", speed = 15 }) {
   const [displayedText, setDisplayedText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    if (!text) return;
+    if (!text) {
+      setDisplayedText("");
+      setCurrentIndex(0);
+      return;
+    }
     setDisplayedText("");
     setCurrentIndex(0);
   }, [text]);
 
   useEffect(() => {
+    if (!text) return;
     if (currentIndex < text.length) {
       // Simulate variable typing speed like ChatGPT
       const randomDelay = speed + Math.random() * (speed * 2);
@@ -216,6 +280,8 @@ function TypingText({ text, speed = 15 }) {
       return () => clearTimeout(timeout);
     }
   }, [currentIndex, text, speed]);
+
+  if (!text) return null;
 
   return (
     <div className="relative inline">
@@ -245,6 +311,10 @@ function Dashboard() {
   const [selectedLang, setSelectedLang] = useState({ name: "English", code: "en-IN", native: "English" });
   const [isTranslating, setIsTranslating] = useState(false);
   const [breakdown, setBreakdown] = useState({ trust: 0, joy: 0, irony: 0 });
+  const [showToolsBox, setShowToolsBox] = useState(false);
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageSaving, setImageSaving] = useState(false);
+  const [selectedThread, setSelectedThread] = useState(null);
 
   const IndianLanguages = [
     { name: "English", code: "en-IN", native: "English" },
@@ -430,7 +500,7 @@ function Dashboard() {
 
       if (!res.ok) throw new Error(r.error || "Failed to fetch summary");
 
-      setSummary(r.summary);
+      setSummary(r.summary || "Analysis complete. No textual summary generated.");
       setPlatform(r.platform);
       setCategory(r.category);
       setScore(r.score);
@@ -535,6 +605,7 @@ function Dashboard() {
           <button onClick={requestNotification} className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-500/50 hover:text-cyan-400 transition-all group">
             <Bell className="w-5 h-5 group-hover:animate-bounce" />
           </button>
+          <ShareLinkButton />
         </div>
 
         <div className="relative">
@@ -543,7 +614,7 @@ function Dashboard() {
         </div>
       </header>
 
-      <section className="max-w-4xl mx-auto">
+      <section className="max-w-7xl mx-auto">
         <div className="glass-panel p-2 neon-border-cyan group">
           <div className="flex flex-col md:flex-row gap-2">
             <input
@@ -551,17 +622,72 @@ function Dashboard() {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && summarize()}
-              placeholder="Inject Source frequency (Reddit / YouTube / X)..."
+              placeholder="Paste a link to summarize (Reddit / YouTube / X / Web)"
             />
             <button
               onClick={() => summarize()}
               disabled={loading}
               className="btn-primary min-w-[180px]"
             >
-              <span>{loading ? "SCANNING..." : "EXTRACT"}</span>
+              <span>{loading ? "SCANNING..." : "Summarize"}</span>
             </button>
           </div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-6">
+          <div className="md:col-span-3">
+            <ConversationsList
+              onSelect={(t) => {
+                setSelectedThread(t);
+                setSummary(t.summary || "");
+                setPlatform(t.platform || "reddit");
+                setCategory(t.category || "");
+                setKeywords(t.keywords || []);
+                setChatHistory(t.chatHistory || []);
+                setCurrentThreadId(t._id);
+              }}
+            />
+          </div>
+          <div className="md:col-span-9 space-y-6">
+            <div className="glass-panel p-6 md:p-8 min-h-[300px]">
+              <div className="flex items-center justify-between mb-4">
+                <span className="label-tech text-cyan-400">{selectedThread ? "Conversation" : "New Conversation"}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowToolsBox(true)}
+                    className="px-3 py-2 rounded-xl border border-white/10 text-[10px] uppercase font-black tracking-widest text-zinc-400 hover:text-white hover:bg-white/5"
+                  >
+                    Tools
+                  </button>
+                  {showToolsBox && <ToolsBox onClose={() => setShowToolsBox(false)} />}
+                </div>
+              </div>
+              <ChatMessages history={chatHistory} />
+            </div>
+            <Composer
+              loading={loading}
+              onRegenerate={() => {
+                if (!chatHistory.length) return;
+                const lastUser = [...chatHistory].reverse().find(m => m.role === 'user');
+                if (lastUser) ask(lastUser.content);
+              }}
+              onSend={(text, clear) => {
+                if (!text.trim()) return;
+                ask(text);
+                clear();
+              }}
+            />
+          </div>
+        </div>
+        <div className="fixed bottom-6 right-6 z-50">
+          <button
+            onClick={() => setShowToolsBox(true)}
+            className="w-12 h-12 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-zinc-300 hover:text-white hover:bg-white/10 hover:border-cyan-500/30 transition-all"
+            aria-label="Open Tools"
+          >
+            Tools
+          </button>
+        </div>
+        {showToolsBox && <ToolsBox onClose={() => setShowToolsBox(false)} />}
         <div className="mt-6 flex flex-wrap justify-center gap-6 opacity-30">
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold">
             <MessageSquare className="w-3 h-3" /> Reddit
@@ -618,7 +744,7 @@ function Dashboard() {
                       {platform === 'web' && <Globe className="w-8 h-8" />}
                     </div>
                     <div>
-                      <span className="label-tech text-cyan-400">Memory Matrix / {category || "Scanning..."}</span>
+                      <span className="label-tech text-cyan-400">Analyze Thread / {category || "Scanning..."}</span>
                       <h2 className="text-4xl font-black tracking-tighter uppercase">{platform} FEED</h2>
                     </div>
                   </div>
@@ -655,6 +781,7 @@ function Dashboard() {
                 </div>
 
                 <div className="prose prose-invert max-w-none text-zinc-300 leading-loose text-xl font-light italic">
+                  <div className="text-[10px] uppercase tracking-widest font-black text-zinc-500 mb-2">AI Insight:</div>
                   <TypingText text={summary} />
                 </div>
 
@@ -701,7 +828,7 @@ function Dashboard() {
               {/* SENTIMENT TREND CHART */}
               <div className="glass-panel p-6 md:p-8">
                 <div className="flex justify-between items-center mb-6">
-                  <span className="label-tech text-cyan-400">Pulse Monitor</span>
+                  <span className="label-tech text-cyan-400">Sentiment Analytics</span>
                   <span className="text-[10px] text-zinc-500 font-mono">LIVE</span>
                 </div>
                 <div className="mt-8 grid grid-cols-1 gap-4">
@@ -729,8 +856,10 @@ function Dashboard() {
                 </div>
               </div>
 
+              
+
               <div className="glass-panel p-6 md:p-10 flex flex-col items-center text-center">
-                <span className="label-tech text-purple-400">Atmosphere Score</span>
+                <span className="label-tech text-purple-400">Insight Index</span>
                 <div className="relative w-48 h-48 mt-8 group">
                   <div className="absolute inset-0 rounded-full border border-white/5 animate-ping opacity-20 group-hover:bg-cyan-500/5 group-hover:border-cyan-500/20 transition-all"></div>
                   <svg className="w-full h-full -rotate-90 relative z-10" viewBox="0 0 100 100">

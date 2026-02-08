@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">ThreadSense</string>
-    <string name="title_activity_main">ThreadSense</string>
-    <string name="package_name">com.threadsense.app</string>
-    <string name="custom_url_scheme">com.threadsense.app</string>
+    <string name="app_name">Thread Sense</string>
+    <string name="title_activity_main">Thread Sense</string>
+    <string name="package_name">com.threadsense.core</string>
+    <string name="custom_url_scheme">com.threadsense.core</string>
 </resources>
