@@ -1,5 +1,8 @@
 # ThreadSense Neural Interface 🚀
 
+[![Deploy static content to Pages](https://github.com/Asishranjansahu/thread-sense/actions/workflows/deploy.yml/badge.svg)](https://github.com/Asishranjansahu/thread-sense/actions/workflows/deploy.yml)
+**[👉 Launch Live App](https://asishranjansahu.github.io/thread-sense/)**
+
 **ThreadSense** is an enterprise-grade Reddit intelligence platform built with a high-end **Neon Cyberpunk UI**. It leverages advanced AI (Ollama/Phi-3) to extract summaries, sentiment analysis, and keyword clouds from complex Reddit discussions in real-time.
 
 ![Neural Dashboard](https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80)
@@ -88,5 +91,3 @@ Internal Clearance Only. Unauthorized distribution of ThreadSense tech is strict
 
 ---
 *Maintained by the Neural Intelligence Agency.*
-
-## Latest Deployment: Thu Feb  5 17:51:03 IST 2026
