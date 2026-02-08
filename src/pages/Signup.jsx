@@ -268,7 +268,11 @@ export default function Signup() {
                                             setLoading(false);
                                         }
                                     }}
-                                    onError={() => setError("Google Auth Failed")}
+                                    onError={() => {
+                                        const origin = typeof window !== "undefined" ? window.location.origin : "";
+                                        const msg = `Google blocked sign-in. Ensure origin "${origin}" is authorized in Google OAuth and use HTTPS production.`;
+                                        setError(msg);
+                                    }}
                                     theme="filled_black"
                                     shape="pill"
                                     text="signup_with"
