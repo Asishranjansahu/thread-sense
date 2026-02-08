@@ -1,6 +1,7 @@
 {
   "name": "thread-sense",
   "version": "1.0.0",
+  "homepage": "https://asishranjansahu.github.io/thread-sense",
   "author": "Asish Ranjan Sahu <asishranjansahu@gmail.com>",
   "main": "electron-main.cjs",
   "scripts": {
