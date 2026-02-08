@@ -27,9 +27,6 @@ import ImagePicker from "./components/ImagePicker";
 import CameraSection from "./components/CameraSection";
 import MicSection from "./components/MicSection";
 import ToolsBox from "./components/ToolsBox";
-import ConversationsList from "./components/ConversationsList";
-import ChatMessages from "./components/ChatMessages";
-import Composer from "./components/Composer";
 import ShareLinkButton from "./components/ShareLinkButton";
 
 // --- CONSTANTS ---
@@ -312,9 +309,6 @@ function Dashboard() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [breakdown, setBreakdown] = useState({ trust: 0, joy: 0, irony: 0 });
   const [showToolsBox, setShowToolsBox] = useState(false);
-  const [imagePreview, setImagePreview] = useState("");
-  const [imageSaving, setImageSaving] = useState(false);
-  const [selectedThread, setSelectedThread] = useState(null);
 
   const IndianLanguages = [
     { name: "English", code: "en-IN", native: "English" },
@@ -633,50 +627,221 @@ function Dashboard() {
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-6">
-          <div className="md:col-span-3">
-            <ConversationsList
-              onSelect={(t) => {
-                setSelectedThread(t);
-                setSummary(t.summary || "");
-                setPlatform(t.platform || "reddit");
-                setCategory(t.category || "");
-                setKeywords(t.keywords || []);
-                setChatHistory(t.chatHistory || []);
-                setCurrentThreadId(t._id);
-              }}
-            />
-          </div>
-          <div className="md:col-span-9 space-y-6">
-            <div className="glass-panel p-6 md:p-8 min-h-[300px]">
-              <div className="flex items-center justify-between mb-4">
-                <span className="label-tech text-cyan-400">{selectedThread ? "Conversation" : "New Conversation"}</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowToolsBox(true)}
-                    className="px-3 py-2 rounded-xl border border-white/10 text-[10px] uppercase font-black tracking-widest text-zinc-400 hover:text-white hover:bg-white/5"
-                  >
-                    Tools
-                  </button>
-                  {showToolsBox && <ToolsBox onClose={() => setShowToolsBox(false)} />}
+
+        <div className="mt-6">
+          <AnimatePresence>
+            {summary && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="grid grid-cols-1 md:grid-cols-12 gap-10"
+              >
+                <div className="md:col-span-8 space-y-10">
+                  <div className="glass-panel p-6 md:p-10 min-h-[600px] border-white/5">
+                    <div className="flex justify-between items-start mb-12 pb-8 border-b border-white/5">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-2xl border ${platform === 'youtube' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                          platform === 'twitter' ? 'bg-sky-500/10 border-sky-500/20 text-sky-400' :
+                            platform === 'instagram' ? 'bg-pink-500/10 border-pink-500/20 text-pink-500' :
+                              platform === 'facebook' ? 'bg-blue-600/10 border-blue-600/20 text-blue-600' :
+                                platform === 'web' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                                  'bg-orange-500/10 border-orange-500/20 text-orange-500'
+                          }`}>
+                          {platform === 'youtube' && <Youtube className="w-8 h-8" />}
+                          {platform === 'twitter' && <Twitter className="w-8 h-8" />}
+                          {platform === 'reddit' && <MessageSquare className="w-8 h-8" />}
+                          {platform === 'instagram' && <Instagram className="w-8 h-8" />}
+                          {platform === 'facebook' && <Facebook className="w-8 h-8" />}
+                          {platform === 'web' && <Globe className="w-8 h-8" />}
+                        </div>
+                        <div>
+                          <span className="label-tech text-cyan-400">Analyze Thread / {category || "Scanning..."}</span>
+                          <h2 className="text-4xl font-black tracking-tighter uppercase">{platform} FEED</h2>
+                        </div>
+                      </div>
+                      <div className="flex gap-4 items-center">
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={selectedLang.code}
+                            onChange={(e) => setSelectedLang(IndianLanguages.find(l => l.code === e.target.value))}
+                            className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-bold text-cyan-400 outline-none hover:border-cyan-500/50 transition-all cursor-pointer"
+                          >
+                            {IndianLanguages.map(lang => (
+                              <option key={lang.code} value={lang.code} className="bg-zinc-900">{lang.native} ({lang.name})</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={translateAndSpeak}
+                            disabled={isTranslating}
+                            className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${isSpeaking ? 'bg-cyan-500 text-black border-cyan-400 animate-pulse' : 'bg-white/5 border-white/10 hover:border-cyan-500/50 text-cyan-400'} ${isTranslating ? 'opacity-50 cursor-wait' : ''}`}
+                          >
+                            {isTranslating ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+                            )}
+                          </button>
+                        </div>
+                        <button onClick={postToReddit} className="px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] font-bold text-red-500 tracking-widest uppercase hover:bg-red-500/20 transition-all">
+                          Post to Reddit
+                        </button>
+                        <div className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-[10px] font-bold text-cyan-400 tracking-widest uppercase">
+                          Verified
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="prose prose-invert max-w-none text-zinc-300 leading-loose text-xl font-light italic">
+                      <div className="text-[10px] uppercase tracking-widest font-black text-zinc-500 mb-2">AI Insight:</div>
+                      <TypingText text={summary} />
+                    </div>
+
+                    <div className="mt-20 pt-12 border-t border-white/5">
+                      <div className="flex items-center justify-between mb-8">
+                        <span className="label-tech text-purple-400">Neural Connectives</span>
+                        <span className="text-[10px] text-zinc-600 font-mono italic uppercase tracking-widest">Semantic Frequency Index</span>
+                      </div>
+                      <div className="flex flex-wrap gap-4 items-center justify-start mt-6 min-h-[150px]">
+                        <AnimatePresence>
+                          {keywords.map((k, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
+                              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                              transition={{
+                                delay: i * 0.08,
+                                type: "spring",
+                                stiffness: 260,
+                                damping: 20
+                              }}
+                              whileHover={{
+                                scale: 1.15,
+                                color: "#00f3ff",
+                                textShadow: "0 0 15px rgba(0, 243, 255, 0.5)"
+                              }}
+                              className={`px-5 py-2 glass-panel border-cyan-500/10 cursor-pointer transition-colors group relative ${i % 3 === 0 ? 'text-lg font-black py-3' : i % 2 === 0 ? 'text-sm font-bold' : 'text-xs font-medium'
+                                }`}
+                            >
+                              <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[inherit]"></div>
+                              <span className="relative z-10 flex items-center gap-2">
+                                <span className="text-cyan-500/30 font-mono">#</span>
+                                {k.toUpperCase()}
+                              </span>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <ChatMessages history={chatHistory} />
-            </div>
-            <Composer
-              loading={loading}
-              onRegenerate={() => {
-                if (!chatHistory.length) return;
-                const lastUser = [...chatHistory].reverse().find(m => m.role === 'user');
-                if (lastUser) ask(lastUser.content);
-              }}
-              onSend={(text, clear) => {
-                if (!text.trim()) return;
-                ask(text);
-                clear();
-              }}
-            />
-          </div>
+
+                <div className="md:col-span-4 space-y-10">
+                  {/* SENTIMENT TREND CHART */}
+                  <div className="glass-panel p-6 md:p-8">
+                    <div className="flex justify-between items-center mb-6">
+                      <span className="label-tech text-cyan-400">Sentiment Analytics</span>
+                      <span className="text-[10px] text-zinc-500 font-mono">LIVE</span>
+                    </div>
+                    <div className="mt-8 grid grid-cols-1 gap-4">
+                      {[
+                        { label: "Trust", value: breakdown.trust, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+                        { label: "Joy", value: breakdown.joy, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+                        { label: "Irony", value: breakdown.irony, color: "text-purple-400", bg: "bg-purple-500/10" }
+                      ].map((stat, i) => (
+                        <div key={i} className="flex items-center gap-4">
+                          <div className="flex-1">
+                            <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-2">
+                              <span className="text-zinc-500">{stat.label}</span>
+                              <span className={stat.color}>{stat.value}%</span>
+                            </div>
+                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${stat.value}%` }}
+                                className={`h-full ${stat.color.replace('text', 'bg')}`}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  
+
+                  <div className="glass-panel p-6 md:p-10 flex flex-col items-center text-center">
+                    <span className="label-tech text-purple-400">Insight Index</span>
+                    <div className="relative w-48 h-48 mt-8 group">
+                      <div className="absolute inset-0 rounded-full border border-white/5 animate-ping opacity-20 group-hover:bg-cyan-500/5 group-hover:border-cyan-500/20 transition-all"></div>
+                      <svg className="w-full h-full -rotate-90 relative z-10" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" className="text-white/5" strokeWidth="4" />
+                        <circle
+                          cx="50" cy="50" r="44" fill="none" stroke="url(#neon-grad)" strokeWidth="6"
+                          strokeDasharray="276.32" strokeDashoffset={276.32 * (1 - score / 100)}
+                          className="transition-all duration-1000 ease-out"
+                          strokeLinecap="round"
+                        />
+                        <defs>
+                          <linearGradient id="neon-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#00f3ff" />
+                            <stop offset="100%" stopColor="#bc13fe" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+                        <motion.span
+                          key={score}
+                          initial={{ scale: 0.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="text-6xl font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                        >
+                          {score}
+                        </motion.span>
+                        <span className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em] mt-1">INDEX</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-6 md:p-8 flex flex-col h-[600px] border-cyan-500/5">
+                    <div className="flex justify-between items-center mb-8">
+                      <span className="label-tech text-green-400">Neural Query</span>
+                      <button onClick={() => setChatHistory([])} className="p-2 hover:bg-white/5 rounded-lg transition-all">
+                        <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto mb-8 space-y-6 pr-2 scrollbar-thin">
+                      {chatHistory.map((msg, i) => (
+                        <div key={i} className={`group animate-fade-in ${msg.role === 'user' ? 'pl-8' : 'pr-8'}`}>
+                          <div className={`p-5 rounded-3xl text-sm ${msg.role === 'user' ? 'bg-white/[0.03] border border-white/10 ml-auto' : 'bg-cyan-500/[0.03] border border-cyan-500/10'}`}>
+                            <div className="text-[9px] font-bold uppercase tracking-widest mb-2 opacity-40">{msg.role}</div>
+                            <div className="text-white leading-relaxed font-light">
+                              {msg.role === 'assistant' && i === chatHistory.length - 1 ? <TypingText text={msg.content} speed={5} /> : msg.content}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition-opacity"></div>
+                      <input
+                        className="cyber-input relative z-10 pr-14 py-5"
+                        value={chat}
+                        onChange={(e) => setChat(e.target.value)}
+                        placeholder="Query frequency..."
+                        onKeyDown={(e) => e.key === 'Enter' && ask()}
+                      />
+                      <button onClick={ask} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-cyan-400 hover:text-white transition-colors">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         <div className="fixed bottom-6 right-6 z-50">
           <button
@@ -717,219 +882,7 @@ function Dashboard() {
         </div>
       )}
 
-      <AnimatePresence>
-        {summary && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="grid grid-cols-1 md:grid-cols-12 gap-10"
-          >
-            <div className="md:col-span-8 space-y-10">
-              <div className="glass-panel p-6 md:p-10 min-h-[600px] border-white/5">
-                <div className="flex justify-between items-start mb-12 pb-8 border-b border-white/5">
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-2xl border ${platform === 'youtube' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
-                      platform === 'twitter' ? 'bg-sky-500/10 border-sky-500/20 text-sky-400' :
-                        platform === 'instagram' ? 'bg-pink-500/10 border-pink-500/20 text-pink-500' :
-                          platform === 'facebook' ? 'bg-blue-600/10 border-blue-600/20 text-blue-600' :
-                            platform === 'web' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                              'bg-orange-500/10 border-orange-500/20 text-orange-500'
-                      }`}>
-                      {platform === 'youtube' && <Youtube className="w-8 h-8" />}
-                      {platform === 'twitter' && <Twitter className="w-8 h-8" />}
-                      {platform === 'reddit' && <MessageSquare className="w-8 h-8" />}
-                      {platform === 'instagram' && <Instagram className="w-8 h-8" />}
-                      {platform === 'facebook' && <Facebook className="w-8 h-8" />}
-                      {platform === 'web' && <Globe className="w-8 h-8" />}
-                    </div>
-                    <div>
-                      <span className="label-tech text-cyan-400">Analyze Thread / {category || "Scanning..."}</span>
-                      <h2 className="text-4xl font-black tracking-tighter uppercase">{platform} FEED</h2>
-                    </div>
-                  </div>
-                  <div className="flex gap-4 items-center">
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={selectedLang.code}
-                        onChange={(e) => setSelectedLang(IndianLanguages.find(l => l.code === e.target.value))}
-                        className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-[10px] font-bold text-cyan-400 outline-none hover:border-cyan-500/50 transition-all cursor-pointer"
-                      >
-                        {IndianLanguages.map(lang => (
-                          <option key={lang.code} value={lang.code} className="bg-zinc-900">{lang.native} ({lang.name})</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={translateAndSpeak}
-                        disabled={isTranslating}
-                        className={`w-10 h-10 flex items-center justify-center rounded-xl border transition-all ${isSpeaking ? 'bg-cyan-500 text-black border-cyan-400 animate-pulse' : 'bg-white/5 border-white/10 hover:border-cyan-500/50 text-cyan-400'} ${isTranslating ? 'opacity-50 cursor-wait' : ''}`}
-                      >
-                        {isTranslating ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
-                        )}
-                      </button>
-                    </div>
-                    <button onClick={postToReddit} className="px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] font-bold text-red-500 tracking-widest uppercase hover:bg-red-500/20 transition-all">
-                      Post to Reddit
-                    </button>
-                    <div className="px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-[10px] font-bold text-cyan-400 tracking-widest uppercase">
-                      Verified
-                    </div>
-                  </div>
-                </div>
 
-                <div className="prose prose-invert max-w-none text-zinc-300 leading-loose text-xl font-light italic">
-                  <div className="text-[10px] uppercase tracking-widest font-black text-zinc-500 mb-2">AI Insight:</div>
-                  <TypingText text={summary} />
-                </div>
-
-                <div className="mt-20 pt-12 border-t border-white/5">
-                  <div className="flex items-center justify-between mb-8">
-                    <span className="label-tech text-purple-400">Neural Connectives</span>
-                    <span className="text-[10px] text-zinc-600 font-mono italic uppercase tracking-widest">Semantic Frequency Index</span>
-                  </div>
-                  <div className="flex flex-wrap gap-4 items-center justify-start mt-6 min-h-[150px]">
-                    <AnimatePresence>
-                      {keywords.map((k, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
-                          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                          transition={{
-                            delay: i * 0.08,
-                            type: "spring",
-                            stiffness: 260,
-                            damping: 20
-                          }}
-                          whileHover={{
-                            scale: 1.15,
-                            color: "#00f3ff",
-                            textShadow: "0 0 15px rgba(0, 243, 255, 0.5)"
-                          }}
-                          className={`px-5 py-2 glass-panel border-cyan-500/10 cursor-pointer transition-colors group relative ${i % 3 === 0 ? 'text-lg font-black py-3' : i % 2 === 0 ? 'text-sm font-bold' : 'text-xs font-medium'
-                            }`}
-                        >
-                          <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[inherit]"></div>
-                          <span className="relative z-10 flex items-center gap-2">
-                            <span className="text-cyan-500/30 font-mono">#</span>
-                            {k.toUpperCase()}
-                          </span>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="md:col-span-4 space-y-10">
-              {/* SENTIMENT TREND CHART */}
-              <div className="glass-panel p-6 md:p-8">
-                <div className="flex justify-between items-center mb-6">
-                  <span className="label-tech text-cyan-400">Sentiment Analytics</span>
-                  <span className="text-[10px] text-zinc-500 font-mono">LIVE</span>
-                </div>
-                <div className="mt-8 grid grid-cols-1 gap-4">
-                  {[
-                    { label: "Trust", value: breakdown.trust, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-                    { label: "Joy", value: breakdown.joy, color: "text-yellow-400", bg: "bg-yellow-500/10" },
-                    { label: "Irony", value: breakdown.irony, color: "text-purple-400", bg: "bg-purple-500/10" }
-                  ].map((stat, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="flex justify-between text-[9px] uppercase font-black tracking-widest mb-2">
-                          <span className="text-zinc-500">{stat.label}</span>
-                          <span className={stat.color}>{stat.value}%</span>
-                        </div>
-                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${stat.value}%` }}
-                            className={`h-full ${stat.color.replace('text', 'bg')}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              
-
-              <div className="glass-panel p-6 md:p-10 flex flex-col items-center text-center">
-                <span className="label-tech text-purple-400">Insight Index</span>
-                <div className="relative w-48 h-48 mt-8 group">
-                  <div className="absolute inset-0 rounded-full border border-white/5 animate-ping opacity-20 group-hover:bg-cyan-500/5 group-hover:border-cyan-500/20 transition-all"></div>
-                  <svg className="w-full h-full -rotate-90 relative z-10" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="44" fill="none" stroke="currentColor" className="text-white/5" strokeWidth="4" />
-                    <circle
-                      cx="50" cy="50" r="44" fill="none" stroke="url(#neon-grad)" strokeWidth="6"
-                      strokeDasharray="276.32" strokeDashoffset={276.32 * (1 - score / 100)}
-                      className="transition-all duration-1000 ease-out"
-                      strokeLinecap="round"
-                    />
-                    <defs>
-                      <linearGradient id="neon-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#00f3ff" />
-                        <stop offset="100%" stopColor="#bc13fe" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-                    <motion.span
-                      key={score}
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-6xl font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-                    >
-                      {score}
-                    </motion.span>
-                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em] mt-1">INDEX</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="glass-panel p-6 md:p-8 flex flex-col h-[600px] border-cyan-500/5">
-                <div className="flex justify-between items-center mb-8">
-                  <span className="label-tech text-green-400">Neural Query</span>
-                  <button onClick={() => setChatHistory([])} className="p-2 hover:bg-white/5 rounded-lg transition-all">
-                    <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto mb-8 space-y-6 pr-2 scrollbar-thin">
-                  {chatHistory.map((msg, i) => (
-                    <div key={i} className={`group animate-fade-in ${msg.role === 'user' ? 'pl-8' : 'pr-8'}`}>
-                      <div className={`p-5 rounded-3xl text-sm ${msg.role === 'user' ? 'bg-white/[0.03] border border-white/10 ml-auto' : 'bg-cyan-500/[0.03] border border-cyan-500/10'}`}>
-                        <div className="text-[9px] font-bold uppercase tracking-widest mb-2 opacity-40">{msg.role}</div>
-                        <div className="text-white leading-relaxed font-light">
-                          {msg.role === 'assistant' && i === chatHistory.length - 1 ? <TypingText text={msg.content} speed={5} /> : msg.content}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition-opacity"></div>
-                  <input
-                    className="cyber-input relative z-10 pr-14 py-5"
-                    value={chat}
-                    onChange={(e) => setChat(e.target.value)}
-                    placeholder="Query frequency..."
-                    onKeyDown={(e) => e.key === 'Enter' && ask()}
-                  />
-                  <button onClick={ask} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-cyan-400 hover:text-white transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
