@@ -1,14 +1,14 @@
-'use strict';
+import express from 'express';
+// import passport from 'passport'; // Passport not installed/configured yet
+import { logError, logInfo } from '../utils/logger.js';
 
-const express = require('express');
-const passport = require('passport');
 const router = express.Router();
-const { logError, logInfo } = require('../utils/logger');
 
 // Google authentication route
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+// router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 // Google authentication callback
+/*
 router.get('/google/callback', (req, res, next) => {
     passport.authenticate('google', (err, user, info) => {
         if (err) {
@@ -29,5 +29,11 @@ router.get('/google/callback', (req, res, next) => {
         });
     })(req, res, next);
 });
+*/
 
-module.exports = router;
+// Placeholder for future auth implementation
+router.get('/', (req, res) => {
+    res.json({ message: "Auth route active. Google Auth not yet configured." });
+});
+
+export default router;
