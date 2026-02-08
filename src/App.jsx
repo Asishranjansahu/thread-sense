@@ -909,11 +909,18 @@ function BackButtonHandler() {
     };
 
     // Add listner
-    const listener = CapacitorApp.addListener('backButton', handleBackButton);
+    let listenerPromise;
+    try {
+      listenerPromise = CapacitorApp.addListener('backButton', handleBackButton);
+    } catch (e) {
+      console.warn("Capacitor BackButton listener failed:", e);
+    }
 
     // Cleanup listener on component unmount or location change
     return () => {
-      listener.then(handler => handler.remove());
+      if (listenerPromise) {
+        listenerPromise.then(handler => handler.remove()).catch(e => console.warn("Failed to remove listener:", e));
+      }
     };
   }, [navigate, location]);
 
