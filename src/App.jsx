@@ -924,7 +924,7 @@ function BackButtonHandler() {
 function App() {
   const { user, loading } = useContext(AuthContext);
 
-  if (loading) return null; // Or a loading spinner
+  if (loading) return <SplashLoader onComplete={() => {}} />;
 
   return (
     <HashRouter>
