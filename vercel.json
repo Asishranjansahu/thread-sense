@@ -1,8 +1,15 @@
 {
     "version": 2,
     "rewrites": [
+        { "source": "/api/:path*", "destination": "https://thread-sense-api.onrender.com/api/:path*" },
+        { "source": "/summarize", "destination": "https://thread-sense-api.onrender.com/summarize" },
+        { "source": "/chat", "destination": "https://thread-sense-api.onrender.com/chat" },
+        { "source": "/sentiment", "destination": "https://thread-sense-api.onrender.com/sentiment" },
+        { "source": "/keywords", "destination": "https://thread-sense-api.onrender.com/keywords" },
+        { "source": "/compare", "destination": "https://thread-sense-api.onrender.com/compare" },
+        { "source": "/target-search", "destination": "https://thread-sense-api.onrender.com/target-search" },
         {
-            "source": "/(.*)",
+            "source": "/((?!api/|summarize|chat|sentiment|keywords|compare|target-search|favicon.ico|assets/).*)",
             "destination": "/index.html"
         }
     ]
