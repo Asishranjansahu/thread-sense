@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  // Base path for GitHub Pages
-  base: '/thread-sense/',
+  // Conditional base path: '/' for Vercel/Render/Dev, '/thread-sense/' for GitHub Pages
+  base: process.env.VERCEL === '1' || process.env.RENDER || process.env.NODE_ENV === 'development' ? '/' : '/thread-sense/',
   plugins: [
     react(),
     VitePWA({
