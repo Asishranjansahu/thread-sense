@@ -1,2 +1,24 @@
-env:
-  GOOGLE_CLIENT_ID: "YOUR_COMPLETE_CLIENT_ID"
+services:
+  - type: web
+    name: thread-sense-api
+    # Environment: Node.js
+    env: node
+    # Plan: Free
+    plan: free
+    # Region: Oregon (us-west-2) is default, but you can change it
+    region: oregon
+    # Build Command
+    buildCommand: cd server && npm install
+    # Start Command
+    startCommand: node server/index.js
+    # Auto-Deploy on push
+    autoDeploy: true
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
