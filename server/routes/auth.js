@@ -1,35 +1,73 @@
 import express from 'express';
-// import passport from 'passport'; // Passport not installed/configured yet
+import { OAuth2Client } from 'google-auth-library';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 import { logError, logInfo } from '../utils/logger.js';
 
 const router = express.Router();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Google authentication route
-// router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+// POST /api/auth/google
+router.post('/google', async (req, res) => {
+    try {
+        const { idToken } = req.body;
+        if (!idToken) {
+            return res.status(400).json({ error: "Missing idToken" });
+        }
 
-// Google authentication callback
-/*
-router.get('/google/callback', (req, res, next) => {
-    passport.authenticate('google', (err, user, info) => {
-        if (err) {
-            logError(`Authentication error: ${err}`);
-            return res.status(500).json({ message: 'Authentication failed', error: err.message });
-        }
-        if (!user) {
-            logInfo('No user found during Google authentication');
-            return res.status(404).json({ message: 'User not found', info });
-        }
-        req.logIn(user, (err) => {
-            if (err) {
-                logError(`Login error: ${err}`);
-                return res.status(500).json({ message: 'Login failed', error: err.message });
-            }
-            logInfo('User authenticated successfully');
-            return res.status(200).json({ message: 'Login successful', user });
+        // Verify Google Token
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID, 
         });
-    })(req, res, next);
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        // Find or Create User
+        let user = await User.findOne({ email });
+
+        if (user) {
+            // Update existing user with googleId if missing
+            if (!user.googleId) {
+                user.googleId = googleId;
+                if (picture && !user.avatar) user.avatar = picture;
+                await user.save();
+            }
+        } else {
+            // Create new user
+            user = new User({
+                username: name || email.split('@')[0],
+                email,
+                googleId,
+                avatar: picture,
+                role: 'member'
+            });
+            await user.save();
+        }
+
+        // Generate JWT
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET || 'default_secret',
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            token,
+            user: {
+                _id: user._id,
+                name: user.username,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar
+            }
+        });
+
+    } catch (error) {
+        logError(`Google Auth Error: ${error.message}`);
+        res.status(500).json({ error: "Google authentication failed" });
+    }
 });
-*/
 
 // Placeholder for future auth implementation
 router.get('/', (req, res) => {
