@@ -208,8 +208,17 @@ export default function Login() {
                                                     headers: { "Content-Type": "application/json" },
                                                     body: JSON.stringify({ idToken: credentialResponse.credential })
                                                 });
-                                                const data = await res.json();
-                                                if (!res.ok) throw new Error(data.error);
+                                                
+                                                const text = await res.text();
+                                                let data;
+                                                try {
+                                                    data = JSON.parse(text);
+                                                } catch (e) {
+                                                    console.error("Non-JSON response:", text);
+                                                    throw new Error("Server connection error (received HTML instead of JSON). The API might be sleeping or the URL is incorrect.");
+                                                }
+
+                                                if (!res.ok) throw new Error(data.error || "Login failed");
                                                 login(data.user, data.token);
                                                 navigate("/");
                                             } catch (err) {
