@@ -35,10 +35,18 @@ export const AuthProvider = ({ children }) => {
             const res = await fetch(`${API}/api/auth/me`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            const data = await res.json();
-            if (res.ok) {
-                setUser(data);
+            
+            // Safely handle non-JSON responses (e.g. 404 HTML or server errors)
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const data = await res.json();
+                if (res.ok) {
+                    setUser(data);
+                } else {
+                    localStorage.removeItem("token");
+                }
             } else {
+                console.warn("Received non-JSON response from API:", await res.text());
                 localStorage.removeItem("token");
             }
         } catch (err) {
