@@ -169,27 +169,15 @@ export default function Login() {
                             </div>
                         </form>
 
-                        <div className="hidden sm:block relative my-6 text-center">
+                        <div className="relative my-6 text-center">
                             <div className="absolute inset-0 flex items-center">
                                 <div className="w-full border-t border-white/5"></div>
                             </div>
                             <span className="relative px-4 bg-[#0a0a0a] text-[10px] uppercase tracking-[0.4em] text-zinc-700 font-bold">OR</span>
                         </div>
 
-                        {/* Guest / Demo Button */}
-                        <div className="sm:hidden mb-4">
-                            <button
-                                type="button"
-                                onClick={handleGuestLogin}
-                                className="w-full py-3 rounded-2xl border border-white/10 text-zinc-400 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all flex items-center justify-center gap-2"
-                            >
-                                <User className="w-3 h-3" />
-                                Continue as Guest
-                            </button>
-                        </div>
-
                         {/* Google Auth Integrated */}
-                        <div className="flex flex-col items-center gap-4 min-h-[40px] justify-center">
+                        <div className="flex flex-col items-center gap-4 min-h-[40px] justify-center mb-4">
                             {loading ? (
                                 <div className="flex items-center gap-3 text-cyan-400 animate-pulse bg-white/5 px-6 py-3 rounded-full border border-cyan-500/30">
                                     <Loader className="w-4 h-4 animate-spin" />
@@ -237,17 +225,20 @@ export default function Login() {
                                         size="large"
                                         width="240"
                                     />
-                                    
-                                    <button
-                                        type="button"
-                                        onClick={handleGuestLogin}
-                                        className="hidden sm:flex w-full py-2 rounded-full border border-white/10 text-zinc-500 font-bold text-[10px] uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all items-center justify-center gap-2"
-                                    >
-                                        <User className="w-3 h-3" />
-                                        Continue as Guest
-                                    </button>
                                 </div>
                             )}
+                        </div>
+
+                        {/* Guest / Demo Button - ALWAYS VISIBLE */}
+                        <div className="flex justify-center">
+                            <button
+                                type="button"
+                                onClick={handleGuestLogin}
+                                className="w-full max-w-[240px] py-3 rounded-2xl border border-white/10 text-zinc-400 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all flex items-center justify-center gap-2"
+                            >
+                                <User className="w-3 h-3" />
+                                Continue as Guest
+                            </button>
                         </div>
 
                         {error && (
