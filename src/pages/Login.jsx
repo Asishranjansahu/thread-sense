@@ -14,8 +14,13 @@ export default function Login() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const { login } = useContext(AuthContext);
+    const { login, loginAsGuest } = useContext(AuthContext);
     const navigate = useNavigate();
+
+    const handleGuestLogin = () => {
+        loginAsGuest();
+        navigate("/");
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -171,6 +176,18 @@ export default function Login() {
                             <span className="relative px-4 bg-[#0a0a0a] text-[10px] uppercase tracking-[0.4em] text-zinc-700 font-bold">OR</span>
                         </div>
 
+                        {/* Guest / Demo Button */}
+                        <div className="sm:hidden mb-4">
+                            <button
+                                type="button"
+                                onClick={handleGuestLogin}
+                                className="w-full py-3 rounded-2xl border border-white/10 text-zinc-400 font-black text-[10px] uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all flex items-center justify-center gap-2"
+                            >
+                                <User className="w-3 h-3" />
+                                Continue as Guest
+                            </button>
+                        </div>
+
                         {/* Google Auth Integrated */}
                         <div className="flex flex-col items-center gap-4 min-h-[40px] justify-center">
                             {loading ? (
@@ -181,34 +198,46 @@ export default function Login() {
                                     </span>
                                 </div>
                             ) : (
-                                <GoogleLogin
-                                    onSuccess={async (credentialResponse) => {
-                                        setLoading(true);
-                                        try {
-                                            const res = await fetch(`${API}/api/auth/google`, {
-                                                method: "POST",
-                                                headers: { "Content-Type": "application/json" },
-                                                body: JSON.stringify({ idToken: credentialResponse.credential })
-                                            });
-                                            const data = await res.json();
-                                            if (!res.ok) throw new Error(data.error);
-                                            login(data.user, data.token);
-                                            navigate("/");
-                                        } catch (err) {
-                                            setError(err.message);
-                                            setLoading(false);
-                                        }
-                                    }}
-                                    onError={() => {
-                                        const origin = typeof window !== "undefined" ? window.location.origin : "";
-                                        const msg = `Google blocked sign-in. Ensure origin "${origin}" is authorized in Google OAuth and use HTTPS production.`;
-                                        setError(msg);
-                                    }}
-                                    theme="filled_black"
-                                    shape="pill"
-                                    text="continue_with"
-                                    useOneTap
-                                />
+                                <div className="flex flex-col gap-3 w-full max-w-[240px]">
+                                    <GoogleLogin
+                                        onSuccess={async (credentialResponse) => {
+                                            setLoading(true);
+                                            try {
+                                                const res = await fetch(`${API}/api/auth/google`, {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({ idToken: credentialResponse.credential })
+                                                });
+                                                const data = await res.json();
+                                                if (!res.ok) throw new Error(data.error);
+                                                login(data.user, data.token);
+                                                navigate("/");
+                                            } catch (err) {
+                                                setError(err.message);
+                                                setLoading(false);
+                                            }
+                                        }}
+                                        onError={() => {
+                                            const origin = typeof window !== "undefined" ? window.location.origin : "";
+                                            const msg = `Google blocked sign-in. Ensure origin "${origin}" is authorized in Google OAuth and use HTTPS production.`;
+                                            console.error(msg);
+                                            setError("Google Sign-in Blocked: Origin mismatch.");
+                                        }}
+                                        theme="filled_black"
+                                        shape="pill"
+                                        size="large"
+                                        width="240"
+                                    />
+                                    
+                                    <button
+                                        type="button"
+                                        onClick={handleGuestLogin}
+                                        className="hidden sm:flex w-full py-2 rounded-full border border-white/10 text-zinc-500 font-bold text-[10px] uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all items-center justify-center gap-2"
+                                    >
+                                        <User className="w-3 h-3" />
+                                        Continue as Guest
+                                    </button>
+                                </div>
                             )}
                         </div>
 

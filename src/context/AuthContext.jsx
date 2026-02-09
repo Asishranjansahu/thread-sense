@@ -18,6 +18,19 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
+        // Handle Guest Session locally
+        if (token === "guest-demo-token") {
+            setUser({
+                _id: "guest-id",
+                name: "Demo User",
+                email: "demo@threadsense.ai",
+                role: "user",
+                isGuest: true
+            });
+            setLoading(false);
+            return;
+        }
+
         try {
             const res = await fetch(`${API}/api/auth/me`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -53,8 +66,20 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    const loginAsGuest = () => {
+        const guestUser = {
+            _id: "guest-id",
+            name: "Demo User",
+            email: "demo@threadsense.ai",
+            role: "user",
+            isGuest: true
+        };
+        localStorage.setItem("token", "guest-demo-token");
+        setUser(guestUser);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, loginAsGuest, loading }}>
             {children}
         </AuthContext.Provider>
     );
