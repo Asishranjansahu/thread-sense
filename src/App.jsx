@@ -499,7 +499,7 @@ function Dashboard() {
       setCategory(r.category);
       setScore(r.score);
       setBreakdown(r.breakdown || { trust: 0, joy: 0, irony: 0 });
-      setKeywords(r.words);
+      setKeywords(Array.isArray(r.words) ? r.words : []);
       setSentimentHistory(prev => [...prev.slice(-9), r.score]);
       setUrl("");
 
@@ -704,7 +704,7 @@ function Dashboard() {
                       </div>
                       <div className="flex flex-wrap gap-4 items-center justify-start mt-6 min-h-[150px]">
                         <AnimatePresence>
-                          {keywords.map((k, i) => (
+                          {Array.isArray(keywords) && keywords.map((k, i) => (
                             <motion.div
                               key={i}
                               initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
@@ -726,7 +726,7 @@ function Dashboard() {
                               <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[inherit]"></div>
                               <span className="relative z-10 flex items-center gap-2">
                                 <span className="text-cyan-500/30 font-mono">#</span>
-                                {k.toUpperCase()}
+                                {String(k).toUpperCase()}
                               </span>
                             </motion.div>
                           ))}
